@@ -25,7 +25,7 @@ export function Navbar() {
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen)
 
   // Hide navbar on specific pages
-  const hideNavbar = pathname === '/explore'
+  const hideNavbar = pathname === '/explore' || pathname?.startsWith('/create')
 
   if (hideNavbar) {
     return null

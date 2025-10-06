@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '@/components/auth/auth-provider'
 import { useRouter } from 'next/navigation'
 import { BottomNav } from '@/components/nav/bottom-nav'
+import { SlideCard } from '@/components/posts/slide-card'
 import { Search } from 'lucide-react'
 
 export default function ExplorePage() {
@@ -30,6 +31,85 @@ export default function ExplorePage() {
 
   const tabs = ['Explore', 'Slides', 'Live']
   const categories = ['Fitness', 'Podcast', 'Videography', 'Modelling', 'Crypto']
+
+  // Sample slides data - replace with actual API data
+  const sampleSlides = [
+    {
+      id: '1',
+      mediaUrl: '/mock/example.png',
+      mediaType: 'image' as const,
+      title: "Let's Pack My Daughter's Lunch",
+      description: "Exclusive content & the only place I respond to all messages. Come join the fun. I'm 19 years old and I love to lift heavy weights.",
+      creatorName: 'Bronte Sheppeard',
+      creatorUsername: 'brontesheppeard',
+      creatorAvatar: '',
+      likes: 1234,
+      comments: 89,
+      isLiked: false,
+    },
+    {
+      id: '2',
+      mediaUrl: '/mock/example.png',
+      mediaType: 'image' as const,
+      title: 'Morning Workout Routine',
+      description: "Join me for my daily workout session. Let's get fit together! Subscribe for exclusive fitness content.",
+      creatorName: 'Fitness Pro',
+      creatorUsername: 'fitnesspro',
+      creatorAvatar: '',
+      likes: 2456,
+      comments: 145,
+      isLiked: false,
+    },
+    {
+      id: '3',
+      mediaUrl: '/mock/example.png',
+      mediaType: 'image' as const,
+      title: 'Cooking with Love',
+      description: "Today I'm making my favorite pasta dish. Follow along and let me know what you think!",
+      creatorName: 'Chef Maria',
+      creatorUsername: 'chefmaria',
+      creatorAvatar: '',
+      likes: 3891,
+      comments: 267,
+      isLiked: false,
+    },
+  ]
+
+  // Show slides view when Slides tab is active
+  if (activeTab === 'Slides') {
+    return (
+      <>
+        {/* Fixed Tabs at Top */}
+        <div className="fixed top-0 left-0 right-0 z-50 bg-white pt-2">
+          <div className="bg-gray-100 rounded-2xl mx-4 mt-2 p-1 flex">
+            {tabs.map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`flex-1 py-2 px-4 rounded-xl font-medium transition-colors ${
+                  activeTab === tab
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-gray-600'
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Vertical Scrollable Slides */}
+        <div className="h-screen overflow-y-scroll snap-y snap-mandatory no-scrollbar scroll-smooth">
+          {sampleSlides.map((slide) => (
+            <SlideCard key={slide.id} {...slide} />
+          ))}
+        </div>
+
+        {/* Bottom Navigation */}
+        <BottomNav />
+      </>
+    )
+  }
 
   return (
     <>
@@ -78,15 +158,17 @@ export default function ExplorePage() {
           ))}
         </div>
 
-        {/* Content Grid - Placeholder */}
-        <div className="px-4">
-          <div className="grid grid-cols-2 gap-2 mb-6">
-            <div className="aspect-[9/16] bg-gray-200 rounded-2xl"></div>
-            <div className="aspect-[9/16] bg-gray-200 rounded-2xl"></div>
-            <div className="aspect-[9/16] bg-gray-200 rounded-2xl"></div>
+        {/* Content Carousel - Placeholder */}
+        <div className="mb-6">
+          <div className="flex gap-2 px-4 overflow-x-auto no-scrollbar">
+            <div className="w-48 aspect-[9/16] bg-gray-200 rounded-2xl flex-shrink-0"></div>
+            <div className="w-48 aspect-[9/16] bg-gray-200 rounded-2xl flex-shrink-0"></div>
+            <div className="w-48 aspect-[9/16] bg-gray-200 rounded-2xl flex-shrink-0"></div>
           </div>
+        </div>
 
-          {/* Creator List - Placeholder */}
+        {/* Creator List - Placeholder */}
+        <div className="px-4">
           <div className="space-y-4">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="flex items-center justify-between py-3 border-b border-gray-100">

@@ -13,6 +13,11 @@ export function BottomNav() {
   const { user } = useAuth()
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
+  // Hide bottom nav on create pages
+  if (pathname?.startsWith('/create')) {
+    return null
+  }
+
   const navItems = [
     { href: '/feed', icon: Home, label: 'Home' },
     { href: '/explore', icon: Search, label: 'Explore' },
