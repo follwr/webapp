@@ -167,9 +167,6 @@ export function Navbar() {
           </div>
         </>
       )}
-
-      {/* Spacer to prevent content from going under fixed navbar */}
-      <div className="h-14" />
     </>
   )
 }
