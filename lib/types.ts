@@ -60,7 +60,7 @@ export interface SubscriptionTier {
   name: string
   description?: string
   price: number
-  benefits?: any
+  benefits?: string[]
   isActive: boolean
   sortOrder: number
   createdAt: string

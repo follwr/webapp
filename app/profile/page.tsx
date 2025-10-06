@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { User, Users, DollarSign, TrendingUp } from 'lucide-react'
+import { BottomNav } from '@/components/nav/bottom-nav'
 import Link from 'next/link'
 
 export default function ProfilePage() {
@@ -38,14 +38,19 @@ export default function ProfilePage() {
         try {
           const profile = await creatorsApi.getMyProfile()
           setCreatorProfile(profile)
-        } catch (err) {
-          // User is not a creator yet
+        } catch {
+          // User is not a creator yet or network error
           setCreatorProfile(null)
         }
 
         // Get subscriptions
-        const subs = await subscriptionsApi.getMySubscriptions()
-        setSubscriptions(subs)
+        try {
+          const subs = await subscriptionsApi.getMySubscriptions()
+          setSubscriptions(subs)
+        } catch {
+          // Network error or no subscriptions
+          setSubscriptions([])
+        }
       } catch (err) {
         console.error('Failed to load profile:', err)
       } finally {
@@ -58,15 +63,19 @@ export default function ProfilePage() {
 
   if (authLoading || loading) {
     return (
-      <div className="flex items-center justify-center min-h-[80vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
+      <>
+        <div className="flex items-center justify-center min-h-[80vh]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+        <BottomNav />
+      </>
     )
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-4xl mx-auto">
+    <>
+      <div className="container mx-auto px-4 py-8 pb-20">
+        <div className="max-w-4xl mx-auto">
         {/* Profile Header */}
         <Card className="mb-8">
           <CardHeader>
@@ -240,5 +249,7 @@ export default function ProfilePage() {
         </Tabs>
       </div>
     </div>
+    <BottomNav />
+  </>
   )
 }
