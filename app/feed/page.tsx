@@ -114,7 +114,7 @@ export default function FeedPage() {
 
           {/* Buttons */}
           <div className="w-full max-w-md px-4 space-y-4">
-            <Link href="/creators" className="block">
+            <Link href="/explore" className="block">
               <PrimaryButton className="text-lg">
                 <div className="flex items-center justify-center gap-2">
                   <UserPlus className="w-5 h-5" />

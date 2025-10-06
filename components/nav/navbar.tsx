@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { usePathname } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useAuth } from '@/components/auth/auth-provider'
@@ -19,8 +20,16 @@ import {
 export function Navbar() {
   const { user, signOut } = useAuth()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const pathname = usePathname()
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen)
+
+  // Hide navbar on specific pages
+  const hideNavbar = pathname === '/explore'
+
+  if (hideNavbar) {
+    return null
+  }
 
   return (
     <>
@@ -101,12 +110,12 @@ export function Navbar() {
                     </Link>
 
                     <Link 
-                      href="/creators"
+                      href="/explore"
                       onClick={toggleMenu}
                       className="flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 rounded-lg transition-colors text-gray-700"
                     >
                       <Users className="h-5 w-5" />
-                      <span className="font-medium">Creators</span>
+                      <span className="font-medium">Explore</span>
                     </Link>
 
                     <Link 

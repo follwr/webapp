@@ -5,7 +5,7 @@ import { useAuth } from '@/components/auth/auth-provider'
 import { useRouter } from 'next/navigation'
 import { BottomNav } from '@/components/nav/bottom-nav'
 
-export default function CreatorsPage() {
+export default function GoLivePage() {
   const { user, loading } = useAuth()
   const router = useRouter()
 
@@ -29,8 +29,8 @@ export default function CreatorsPage() {
   return (
     <>
       <div className="container mx-auto px-4 py-8 pb-20">
-        <h1 className="text-3xl font-bold mb-8">Find Creators</h1>
-        <p className="text-gray-600">Discover and follow your favorite creators</p>
+        <h1 className="text-3xl font-bold mb-8">Go Live</h1>
+        <p className="text-gray-600">Start your live stream</p>
       </div>
       <BottomNav />
     </>

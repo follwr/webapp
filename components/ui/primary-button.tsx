@@ -25,8 +25,7 @@ export function PrimaryButton({
       )}
       style={{
         background: '#3075FF',
-        boxShadow: '0px 0px 9px 0px #C0D5FF inset',
-        border: '1px solid #0000000D'
+        boxShadow: '0px 0px 9px 0px #C0D5FF inset'
       }}
       {...props}
     >

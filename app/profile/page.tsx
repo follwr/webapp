@@ -239,7 +239,7 @@ export default function ProfilePage() {
                   <p className="text-muted-foreground mb-4">
                     You haven&apos;t subscribed to any creators yet
                   </p>
-                  <Link href="/creators">
+                  <Link href="/explore">
                     <Button>Discover Creators</Button>
                   </Link>
                 </CardContent>
