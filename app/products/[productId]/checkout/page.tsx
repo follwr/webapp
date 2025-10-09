@@ -158,7 +158,7 @@ export default function PurchaseConfirmationPage() {
           Continue to checkout
         </PrimaryButton>
         <p className="text-center text-sm text-gray-500">
-          You won't be charged yet
+          You won&apos;t be charged yet
         </p>
       </div>
     </div>

@@ -165,7 +165,7 @@ export default function PurchasedItemDetailPage() {
               </button>
             </div>
           </div>
-        ) : (
+        ) : mockItem.imageUrl ? (
           // Regular Post Image
           <div className="w-full">
             <img
@@ -174,7 +174,7 @@ export default function PurchasedItemDetailPage() {
               className="w-full object-cover"
             />
           </div>
-        )}
+        ) : null}
 
         {/* Action Buttons */}
         <div className="flex items-center gap-6 px-4 py-4">

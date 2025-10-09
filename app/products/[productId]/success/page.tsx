@@ -33,7 +33,7 @@ export default function PurchaseSuccessPage() {
     router.push('/feed')
   }
 
-  const handleFileClick = (file: any) => {
+  const handleFileClick = (file: { id: string; name: string; type: string; url: string; thumbnail: string | null }) => {
     console.log('Opening file:', file.name)
     // TODO: Download or open file
   }

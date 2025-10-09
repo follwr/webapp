@@ -1,8 +1,8 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ChevronLeft, Plus, Info } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { Plus, Info } from 'lucide-react'
+import { useEffect, useState, Suspense } from 'react'
 import { useAuth } from '@/components/auth/auth-provider'
 
 // Mock custom lists
@@ -10,7 +10,7 @@ const mockCustomLists = [
   { id: 'vip', name: 'VIP List', userCount: 24 },
 ]
 
-export default function BroadcastListPage() {
+function BroadcastListContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user, loading } = useAuth()
@@ -118,6 +118,18 @@ export default function BroadcastListPage() {
         ))}
       </div>
     </div>
+  )
+}
+
+export default function BroadcastListPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    }>
+      <BroadcastListContent />
+    </Suspense>
   )
 }
 
