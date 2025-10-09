@@ -305,3 +305,4 @@ Your frontend is ready for development. Start building features and iterate base
 ---
 
 **Built with ❤️ using Next.js 15 and shadcn/ui**
+

@@ -167,24 +167,31 @@ export default function ExplorePage() {
           </div>
         </div>
 
-        {/* Creator List - Placeholder */}
+        {/* Creator List */}
         <div className="px-4">
           <div className="space-y-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="flex items-center justify-between py-3 border-b border-gray-100">
+            {[
+              { id: 1, name: 'Bronte Sheppeard', username: 'brontesheppeard' },
+              { id: 2, name: 'John Doe', username: 'johndoe' },
+              { id: 3, name: 'Jane Smith', username: 'janesmith' },
+              { id: 4, name: 'Mike Johnson', username: 'mikejohnson' },
+            ].map((creator) => (
+              <button
+                key={creator.id}
+                onClick={() => router.push(`/creators/${creator.username}`)}
+                className="w-full flex items-center justify-between py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors"
+              >
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
-                  <div>
-                    <p className="font-semibold text-gray-900">Creator Name</p>
-                    <p className="text-sm text-gray-500">@username</p>
+                  <div className="w-12 h-12 bg-blue-400 rounded-full"></div>
+                  <div className="text-left">
+                    <p className="font-semibold text-gray-900">{creator.name}</p>
+                    <p className="text-sm text-gray-500">@{creator.username}</p>
                   </div>
                 </div>
-                <button className="text-blue-600">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </div>
+                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
             ))}
           </div>
         </div>

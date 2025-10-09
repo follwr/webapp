@@ -41,3 +41,4 @@ export const postsApi = {
     return response.data
   },
 }
+

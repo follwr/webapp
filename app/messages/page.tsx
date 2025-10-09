@@ -1,16 +1,17 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from '@/components/auth/auth-provider'
 import { useRouter } from 'next/navigation'
 import { BottomNav } from '@/components/nav/bottom-nav'
-import { PrimaryButton } from '@/components/ui/primary-button'
-import { UserPlus } from 'lucide-react'
-import Image from 'next/image'
+import { CreatorMessages } from '@/components/messages/creator-messages'
+import { UserMessages } from '@/components/messages/user-messages'
+import { UserCircle, Crown } from 'lucide-react'
 
 export default function MessagesPage() {
-  const { user, loading } = useAuth()
+  const { user, isCreator, loading } = useAuth()
   const router = useRouter()
+  const [testMode, setTestMode] = useState<'auto' | 'creator' | 'user'>('auto')
 
   useEffect(() => {
     if (!loading && !user) {
@@ -29,47 +30,53 @@ export default function MessagesPage() {
     )
   }
 
+  // Determine which view to show based on test mode
+  const showCreatorView = testMode === 'creator' || (testMode === 'auto' && isCreator)
+
   return (
     <>
-      <div className="flex flex-col min-h-screen pb-20">
-        {/* Header */}
-        <div className="px-6 pt-8 pb-4">
-          <h1 className="text-3xl font-bold text-gray-900">Messages</h1>
+      {/* Test Mode Toggle - Development Only */}
+      <div className="fixed top-4 right-4 z-50 bg-white rounded-lg shadow-lg border border-gray-200 p-2">
+        <div className="text-xs font-semibold text-gray-500 mb-2 px-2">Test View</div>
+        <div className="flex gap-1">
+          <button
+            onClick={() => setTestMode('auto')}
+            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+              testMode === 'auto'
+                ? 'bg-purple-600 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            Auto
+          </button>
+          <button
+            onClick={() => setTestMode('user')}
+            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1 ${
+              testMode === 'user'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            <UserCircle className="w-3 h-3" />
+            User
+          </button>
+          <button
+            onClick={() => setTestMode('creator')}
+            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1 ${
+              testMode === 'creator'
+                ? 'bg-amber-600 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            <Crown className="w-3 h-3" />
+            Creator
+          </button>
         </div>
+      </div>
 
-        {/* Empty State */}
-        <div className="flex-1 flex flex-col items-center justify-center px-6 pb-8">
-          {/* Messages Illustration */}
-          <div className="w-80 h-80 relative mb-12">
-            <Image
-              src="/assets/messages.png"
-              alt="Messages"
-              fill
-              className="object-contain"
-            />
-          </div>
-
-          {/* Text Content */}
-          <div className="text-center mb-8 max-w-md">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-3">
-              Subscribe to start sending messages.
-            </h2>
-            <p className="text-gray-500 text-base leading-relaxed">
-              When you subscribe to a creator, you will be able to send them messages
-            </p>
-          </div>
-
-          {/* Find Creators Button */}
-          <div className="w-full max-w-md px-6">
-            <PrimaryButton 
-              onClick={() => router.push('/explore')}
-              className="flex items-center justify-center gap-2"
-            >
-              <UserPlus className="w-5 h-5" />
-              <span>Find creators</span>
-            </PrimaryButton>
-          </div>
-        </div>
+      <div className="pb-20">
+        {/* Conditionally render based on user type */}
+        {showCreatorView ? <CreatorMessages /> : <UserMessages />}
       </div>
       <BottomNav />
     </>

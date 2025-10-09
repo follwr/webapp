@@ -34,7 +34,7 @@ export default function NotFound() {
             Page not found
           </h3>
           <p className="text-gray-600 text-base">
-            Sorry, the page you're looking<br />for doesn't exist.
+            Sorry, the page you&apos;re looking<br />for doesn&apos;t exist.
           </p>
         </div>
       </div>

@@ -15,7 +15,7 @@ export function CreateModal({ isOpen, onClose }: CreateModalProps) {
     { icon: Image, label: 'Create a post', href: '/create' },
     { icon: Clapperboard, label: 'Create slides', href: '/create/slides' },
     { icon: Radio, label: 'Go live', href: '/create/live' },
-    { icon: ShoppingBag, label: 'Shop Product', href: '/create/shop' },
+    { icon: ShoppingBag, label: 'Create Product', href: '/create/product' },
   ]
 
   return (

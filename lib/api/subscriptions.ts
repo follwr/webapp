@@ -31,3 +31,4 @@ export const subscriptionsApi = {
     return response.data
   },
 }
+

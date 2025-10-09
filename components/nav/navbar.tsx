@@ -15,17 +15,24 @@ import {
   X,
   Users,
   Bell,
+  Radio,
+  Bookmark,
+  ShoppingBag,
+  CreditCard,
+  DollarSign,
+  Settings,
+  HelpCircle,
 } from 'lucide-react'
 
 export function Navbar() {
-  const { user, signOut } = useAuth()
+  const { user, isCreator, signOut } = useAuth()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const pathname = usePathname()
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen)
 
   // Hide navbar on specific pages
-  const hideNavbar = pathname === '/explore' || pathname?.startsWith('/create') || pathname === '/messages'
+  const hideNavbar = pathname === '/explore' || pathname?.startsWith('/create') || pathname?.startsWith('/messages') || pathname?.startsWith('/settings') || pathname?.startsWith('/subscriptions') || pathname?.startsWith('/banking') || pathname?.startsWith('/saved') || pathname?.startsWith('/purchased') || pathname?.startsWith('/products/')
 
   if (hideNavbar) {
     return null
@@ -62,94 +69,231 @@ export function Navbar() {
         </div>
       </nav>
 
-      {/* Dropdown Menu */}
+      {/* Fullscreen Mobile Menu */}
       {isMenuOpen && (
         <>
           {/* Backdrop */}
           <div 
-            className="fixed inset-0 bg-black/20 z-40 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/50 z-40"
             onClick={toggleMenu}
           />
           
-          {/* Menu Content */}
-          <div className="fixed top-20 right-6 z-50 bg-white rounded-2xl shadow-2xl w-72 overflow-hidden border border-gray-100">
-            <div className="p-4">
+          {/* Menu Content - Fullscreen on mobile */}
+          <div className="fixed top-0 right-0 bottom-0 z-50 bg-white w-80 max-w-[85vw] shadow-2xl overflow-y-auto">
+            <div className="p-6">
               {user ? (
                 <>
                   {/* User Info */}
                   <Link 
                     href="/profile" 
                     onClick={toggleMenu}
-                    className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors mb-2"
+                    className="flex items-center gap-4 mb-6"
                   >
-                    <Avatar className="h-12 w-12">
+                    <Avatar className="h-16 w-16">
                       <AvatarImage src={user.user_metadata?.avatar_url} />
-                      <AvatarFallback className="bg-blue-600 text-white">
+                      <AvatarFallback className="bg-blue-600 text-white text-xl">
                         {user.email?.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 truncate">
-                        {user.user_metadata?.full_name || user.email}
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <p className="font-semibold text-xl text-gray-900 truncate">
+                          {user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'}
+                        </p>
+                        {isCreator && (
+                          <svg className="w-5 h-5 text-blue-500 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                            <circle cx="12" cy="12" r="10" fill="currentColor"/>
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="white"/>
+                          </svg>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-500 truncate">
+                        @{user.email?.split('@')[0] || 'username'}
                       </p>
-                      <p className="text-sm text-gray-500 truncate">{user.email}</p>
                     </div>
                   </Link>
 
-                  <div className="h-px bg-gray-200 my-2" />
+                  <div className="h-px bg-gray-200 mb-4" />
 
-                  {/* Menu Items */}
-                  <div className="space-y-1">
-                    <Link 
-                      href="/feed"
-                      onClick={toggleMenu}
-                      className="flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 rounded-lg transition-colors text-gray-700"
-                    >
-                      <Home className="h-5 w-5" />
-                      <span className="font-medium">Feed</span>
-                    </Link>
+                  {/* Menu Items - Different for creators vs users */}
+                  {isCreator ? (
+                    // Creator Menu
+                    <div className="space-y-2">
+                      <Link 
+                        href="/subscriptions"
+                        onClick={toggleMenu}
+                        className="block py-3 hover:bg-gray-50 rounded-lg transition-colors text-gray-900"
+                      >
+                        <span className="font-normal text-[15px]">Subscriptions</span>
+                      </Link>
 
-                    <Link 
-                      href="/explore"
-                      onClick={toggleMenu}
-                      className="flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 rounded-lg transition-colors text-gray-700"
-                    >
-                      <Users className="h-5 w-5" />
-                      <span className="font-medium">Explore</span>
-                    </Link>
+                      <Link 
+                        href="/saved"
+                        onClick={toggleMenu}
+                        className="block py-3 hover:bg-gray-50 rounded-lg transition-colors text-gray-900"
+                      >
+                        <span className="font-normal text-[15px]">Saved posts</span>
+                      </Link>
 
-                    <Link 
-                      href="/posts/create"
-                      onClick={toggleMenu}
-                      className="flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 rounded-lg transition-colors text-gray-700"
-                    >
-                      <PlusCircle className="h-5 w-5" />
-                      <span className="font-medium">Create Post</span>
-                    </Link>
+                      <Link 
+                        href="/purchased"
+                        onClick={toggleMenu}
+                        className="block py-3 hover:bg-gray-50 rounded-lg transition-colors text-gray-900"
+                      >
+                        <span className="font-normal text-[15px]">Purchased Items</span>
+                      </Link>
 
-                    <Link 
-                      href="/profile"
-                      onClick={toggleMenu}
-                      className="flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 rounded-lg transition-colors text-gray-700"
-                    >
-                      <User className="h-5 w-5" />
-                      <span className="font-medium">Profile</span>
-                    </Link>
-                  </div>
+                      <div className="h-px bg-gray-200 my-4" />
 
-                  <div className="h-px bg-gray-200 my-2" />
+                      <Link 
+                        href="/analytics"
+                        onClick={toggleMenu}
+                        className="block py-3 hover:bg-gray-50 rounded-lg transition-colors text-gray-900"
+                      >
+                        <span className="font-normal text-[15px]">Analytics</span>
+                      </Link>
 
-                  {/* Sign Out */}
-                  <button
-                    onClick={() => {
-                      signOut()
-                      toggleMenu()
-                    }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-red-50 rounded-lg transition-colors text-red-600"
-                  >
-                    <LogOut className="h-5 w-5" />
-                    <span className="font-medium">Sign Out</span>
-                  </button>
+                      <Link 
+                        href="/banking"
+                        onClick={toggleMenu}
+                        className="block py-3 hover:bg-gray-50 rounded-lg transition-colors text-gray-900"
+                      >
+                        <span className="font-normal text-[15px]">Banking and payouts</span>
+                      </Link>
+
+                      <Link 
+                        href="/subscription-price"
+                        onClick={toggleMenu}
+                        className="block py-3 hover:bg-gray-50 rounded-lg transition-colors text-gray-900"
+                      >
+                        <span className="font-normal text-[15px]">Subscription Price</span>
+                      </Link>
+
+                      <div className="h-px bg-gray-200 my-4" />
+
+                      <Link 
+                        href="/messages/broadcast"
+                        onClick={toggleMenu}
+                        className="block py-3 hover:bg-gray-50 rounded-lg transition-colors text-gray-900"
+                      >
+                        <span className="font-normal text-[15px]">Broadcast List</span>
+                      </Link>
+
+                      <Link 
+                        href="/referral"
+                        onClick={toggleMenu}
+                        className="block py-3 hover:bg-gray-50 rounded-lg transition-colors text-gray-900"
+                      >
+                        <span className="font-normal text-[15px]">Referral Program</span>
+                      </Link>
+
+                      <div className="h-px bg-gray-200 my-4" />
+
+                      <Link 
+                        href="/settings"
+                        onClick={toggleMenu}
+                        className="block py-3 hover:bg-gray-50 rounded-lg transition-colors text-gray-900"
+                      >
+                        <span className="font-normal text-[15px]">Settings</span>
+                      </Link>
+
+                      <Link 
+                        href="/help"
+                        onClick={toggleMenu}
+                        className="block py-3 hover:bg-gray-50 rounded-lg transition-colors text-gray-900"
+                      >
+                        <span className="font-normal text-[15px]">Help & Support</span>
+                      </Link>
+
+                      <div className="h-px bg-gray-200 my-4" />
+
+                      <button
+                        onClick={() => {
+                          signOut()
+                          toggleMenu()
+                        }}
+                        className="w-full text-left py-3 hover:bg-gray-50 rounded-lg transition-colors text-gray-900"
+                      >
+                        <span className="font-normal text-[15px]">Logout</span>
+                      </button>
+                    </div>
+                  ) : (
+                    // Regular User Menu
+                    <div className="space-y-2">
+                      <Link 
+                        href="/subscriptions"
+                        onClick={toggleMenu}
+                        className="block py-3 hover:bg-gray-50 rounded-lg transition-colors text-gray-900"
+                      >
+                        <span className="font-normal text-[15px]">Subscriptions</span>
+                      </Link>
+
+                      <Link 
+                        href="/saved"
+                        onClick={toggleMenu}
+                        className="block py-3 hover:bg-gray-50 rounded-lg transition-colors text-gray-900"
+                      >
+                        <span className="font-normal text-[15px]">Saved posts</span>
+                      </Link>
+
+                      <Link 
+                        href="/purchased"
+                        onClick={toggleMenu}
+                        className="block py-3 hover:bg-gray-50 rounded-lg transition-colors text-gray-900"
+                      >
+                        <span className="font-normal text-[15px]">Purchased Items</span>
+                      </Link>
+
+                      <div className="h-px bg-gray-200 my-4" />
+
+                      <Link 
+                        href="/banking"
+                        onClick={toggleMenu}
+                        className="block py-3 hover:bg-gray-50 rounded-lg transition-colors text-gray-900"
+                      >
+                        <span className="font-normal text-[15px]">Banking</span>
+                      </Link>
+
+                      <Link 
+                        href="/start-earning"
+                        onClick={toggleMenu}
+                        className="block py-3 hover:bg-gray-50 rounded-lg transition-colors text-gray-900"
+                      >
+                        <span className="font-normal text-[15px]">Start Earning</span>
+                      </Link>
+
+                      <div className="h-px bg-gray-200 my-4" />
+
+                      <Link 
+                        href="/settings"
+                        onClick={toggleMenu}
+                        className="block py-3 hover:bg-gray-50 rounded-lg transition-colors text-gray-900"
+                      >
+                        <span className="font-normal text-[15px]">Settings</span>
+                      </Link>
+
+                      <Link 
+                        href="/help"
+                        onClick={toggleMenu}
+                        className="block py-3 hover:bg-gray-50 rounded-lg transition-colors text-gray-900"
+                      >
+                        <span className="font-normal text-[15px]">Help & Support</span>
+                      </Link>
+
+                      <div className="h-px bg-gray-200 my-4" />
+
+                      <button
+                        onClick={() => {
+                          signOut()
+                          toggleMenu()
+                        }}
+                        className="w-full text-left py-3 hover:bg-gray-50 rounded-lg transition-colors text-gray-900"
+                      >
+                        <span className="font-normal text-[15px]">Logout</span>
+                      </button>
+                    </div>
+                  )}
                 </>
               ) : (
                 <>
@@ -179,3 +323,4 @@ export function Navbar() {
     </>
   )
 }
+
