@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useAuth } from '@/components/auth/auth-provider'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -26,7 +26,7 @@ export default function FeedPage() {
     }
   }, [user, authLoading, router])
 
-  const fetchPosts = async () => {
+  const fetchPosts = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -55,13 +55,13 @@ export default function FeedPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
-    if (user) {
+    if (user && !authLoading) {
       fetchPosts()
     }
-  }, [user])
+  }, [user, authLoading, fetchPosts])
 
   if (authLoading || loading) {
     return (
