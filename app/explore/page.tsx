@@ -244,7 +244,15 @@ export default function ExplorePage() {
                   </button>
                 ))}
               {creators.length === 0 && !loadingCreators && (
-                <p className="text-center text-gray-500 py-8">No creators found</p>
+                <div className="text-center py-12">
+                  <p className="text-gray-900 font-semibold text-lg mb-2">No creators yet</p>
+                  <p className="text-gray-500 text-sm">
+                    Backend endpoint for listing creators not implemented yet.
+                  </p>
+                  <p className="text-gray-500 text-sm mt-2">
+                    Try visiting a creator directly: <span className="text-blue-500">/creators/username</span>
+                  </p>
+                </div>
               )}
             </div>
           )}
