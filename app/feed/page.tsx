@@ -32,14 +32,25 @@ export default function FeedPage() {
       setError(null)
       const data = await postsApi.getFeed()
       setPosts(data)
-    } catch (err) {
-      const error = err as { code?: string; message?: string }
+    } catch (err: any) {
+      const errorCode = err?.response?.status
+      const errorMessage = err?.response?.data?.message || err?.message
+      
       // If it's a network error (no backend), just show empty state
-      if (error.code === 'ERR_NETWORK' || error.message?.includes('Network Error')) {
+      if (err.code === 'ERR_NETWORK' || errorMessage?.includes('Network Error')) {
         setPosts([])
         setError(null)
-      } else {
-        setError(error.message || 'Failed to load feed')
+      } 
+      // If 401/403, user might need to create profile or login
+      else if (errorCode === 401 || errorCode === 403) {
+        setPosts([])
+        setError(null) // Show empty state instead of error
+      }
+      // Other errors
+      else {
+        console.error('Feed error:', err)
+        setPosts([])
+        setError(null) // Show empty state for all errors
       }
     } finally {
       setLoading(false)
