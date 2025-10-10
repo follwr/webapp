@@ -48,12 +48,22 @@ export const creatorsApi = {
     return response.data.data
   },
 
-  // List all creators (for explore page) - NOT IMPLEMENTED YET IN BACKEND
-  listCreators: async (page = 1, limit = 20) => {
-    // TODO: Backend needs to implement GET /creators endpoint
-    // For now, return empty array
-    console.warn('GET /creators endpoint not implemented in backend yet')
-    return []
+  // List all creators (for explore page)
+  listCreators: async (params?: {
+    q?: string
+    page?: number
+    limit?: number
+    sort?: 'trending' | 'newest' | 'popular'
+  }) => {
+    const response = await apiClient.get<{ data: CreatorProfile[] }>('/creators', {
+      params: {
+        q: params?.q,
+        page: params?.page || 1,
+        limit: params?.limit || 20,
+        sort: params?.sort || 'trending'
+      }
+    })
+    return response.data.data
   },
 }
 

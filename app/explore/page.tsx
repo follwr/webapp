@@ -16,6 +16,7 @@ export default function ExplorePage() {
   const [creators, setCreators] = useState<CreatorProfile[]>([])
   const [loadingCreators, setLoadingCreators] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const [sortBy, setSortBy] = useState<'trending' | 'newest' | 'popular'>('trending')
 
   useEffect(() => {
     if (!loading && !user) {
@@ -27,7 +28,12 @@ export default function ExplorePage() {
     const fetchCreators = async () => {
       try {
         setLoadingCreators(true)
-        const data = await creatorsApi.listCreators(1, 20)
+        const data = await creatorsApi.listCreators({
+          q: searchQuery || undefined,
+          page: 1,
+          limit: 20,
+          sort: sortBy
+        })
         setCreators(data)
       } catch (error) {
         console.error('Failed to load creators:', error)
@@ -38,9 +44,14 @@ export default function ExplorePage() {
     }
 
     if (user) {
-      fetchCreators()
+      // Debounce search
+      const timeoutId = setTimeout(() => {
+        fetchCreators()
+      }, 300)
+
+      return () => clearTimeout(timeoutId)
     }
-  }, [user])
+  }, [user, searchQuery, sortBy])
 
   if (loading) {
     return (
@@ -172,14 +183,19 @@ export default function ExplorePage() {
         {/* Explore Creators Title */}
         <h2 className="text-2xl font-bold px-4 mb-4">Explore creators</h2>
 
-        {/* Categories */}
+        {/* Sort Options */}
         <div className="flex gap-2 px-4 mb-6 overflow-x-auto no-scrollbar">
-          {categories.map((category) => (
+          {(['trending', 'newest', 'popular'] as const).map((sort) => (
             <button
-              key={category}
-              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-700 font-medium whitespace-nowrap transition-colors"
+              key={sort}
+              onClick={() => setSortBy(sort)}
+              className={`px-4 py-2 rounded-full font-medium whitespace-nowrap transition-colors ${
+                sortBy === sort
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+              }`}
             >
-              {category}
+              {sort.charAt(0).toUpperCase() + sort.slice(1)}
             </button>
           ))}
         </div>
@@ -201,14 +217,7 @@ export default function ExplorePage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {creators
-                .filter((creator) =>
-                  searchQuery
-                    ? creator.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                      creator.username.toLowerCase().includes(searchQuery.toLowerCase())
-                    : true
-                )
-                .map((creator) => (
+              {creators.map((creator) => (
                   <button
                     key={creator.id}
                     onClick={() => router.push(`/creators/${creator.username}`)}
@@ -245,12 +254,13 @@ export default function ExplorePage() {
                 ))}
               {creators.length === 0 && !loadingCreators && (
                 <div className="text-center py-12">
-                  <p className="text-gray-900 font-semibold text-lg mb-2">No creators yet</p>
-                  <p className="text-gray-500 text-sm">
-                    Backend endpoint for listing creators not implemented yet.
+                  <p className="text-gray-900 font-semibold text-lg mb-2">
+                    {searchQuery ? 'No creators found' : 'No creators yet'}
                   </p>
-                  <p className="text-gray-500 text-sm mt-2">
-                    Try visiting a creator directly: <span className="text-blue-500">/creators/username</span>
+                  <p className="text-gray-500 text-sm">
+                    {searchQuery 
+                      ? `No results for "${searchQuery}". Try a different search term.`
+                      : 'Be the first to create content!'}
                   </p>
                 </div>
               )}
