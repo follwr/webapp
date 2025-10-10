@@ -36,7 +36,7 @@ export default function CreatorProfilePage() {
       try {
         setLoadingData(true)
         const data = await creatorsApi.getByUsername(username)
-        setCreator(data.profile)
+        setCreator(data)
         setPosts(data.posts || [])
 
         // Fetch products
