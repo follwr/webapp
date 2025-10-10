@@ -3,32 +3,40 @@ import { Subscription } from '../types'
 
 export const subscriptionsApi = {
   // Subscribe to a creator
-  subscribe: async (data: {
-    creatorId: string
-    tierId?: string
-  }) => {
-    const response = await apiClient.post<Subscription>('/subscriptions', data)
-    return response.data
+  subscribe: async (creatorId: string, paymentMethodId: string) => {
+    const response = await apiClient.post<{ data: { subscription: Subscription; clientSecret?: string } }>(
+      `/subscriptions/${creatorId}`,
+      { paymentMethodId }
+    )
+    return response.data.data
   },
 
   // Get my subscriptions
-  getMySubscriptions: async () => {
-    const response = await apiClient.get<Subscription[]>('/subscriptions/my-subscriptions')
-    return response.data
+  getMySubscriptions: async (page = 1, limit = 20) => {
+    const response = await apiClient.get<{ data: Subscription[] }>('/subscriptions', {
+      params: { page, limit }
+    })
+    return response.data.data
   },
 
-  // Check subscription status
-  checkStatus: async (creatorId: string) => {
-    const response = await apiClient.get<{ isSubscribed: boolean, subscription?: Subscription }>(
-      `/subscriptions/creator/${creatorId}/check`
-    )
-    return response.data
+  // Get subscription details
+  getSubscription: async (subscriptionId: string) => {
+    const response = await apiClient.get<{ data: Subscription }>(`/subscriptions/${subscriptionId}`)
+    return response.data.data
   },
 
   // Cancel subscription
   cancel: async (subscriptionId: string) => {
-    const response = await apiClient.delete(`/subscriptions/${subscriptionId}`)
-    return response.data
+    const response = await apiClient.delete<{ data: Subscription }>(`/subscriptions/${subscriptionId}`)
+    return response.data.data
+  },
+
+  // Update auto-renewal
+  updateAutoRenew: async (subscriptionId: string, autoRenew: boolean) => {
+    const response = await apiClient.put<{ data: Subscription }>(`/subscriptions/${subscriptionId}`, {
+      autoRenew
+    })
+    return response.data.data
   },
 }
 

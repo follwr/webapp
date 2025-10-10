@@ -3,53 +3,25 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/components/auth/auth-provider'
 import { useRouter, useParams } from 'next/navigation'
-import { Heart, LayoutGrid, DollarSign, MessageCircle, UserPlus, Image as ImageIcon } from 'lucide-react'
-import Image from 'next/image'
-
-// Mock creator data
-const mockCreator = {
-  id: '1',
-  displayName: 'Bronte Sheppeard',
-  username: 'brontesheppeard',
-  isVerified: true,
-  coverImageUrl: null, // Use gradient for mock
-  profilePictureUrl: null,
-  bio: 'Exclusive content & the only place I respond to all messages. Come join the fun. I\'m 19 years old and I love to lift heavy weights.',
-  totalLikes: 17,
-  totalPosts: 42,
-  subscriptionPrice: 9.99,
-  isSubscribed: false,
-  isFollowing: false,
-}
-
-// Mock posts
-const mockPosts = [
-  { id: '1', caption: 'Gymmmmieee. Feeling cute but weak. One week into my first..', isLocked: true, imageUrl: null },
-  { id: '2', caption: 'Behind the scenes of my first ever fitness shoot', isLocked: true, imageUrl: null },
-  { id: '3', caption: 'Meet & Greet 🤝', isLocked: true, imageUrl: null },
-  { id: '4', caption: 'Gym selfie', isLocked: true, imageUrl: null },
-]
-
-// Mock products
-const mockProducts = [
-  { id: '1', title: 'My custom gym program', price: 29.99, imageUrl: '/mock/example.png' },
-  { id: '2', title: '10 week meal plan guide', price: 19.99, imageUrl: '/mock/example.png' },
-  { id: '3', title: '10 weeks custom gym program + meal plan guide', price: 49.99, imageUrl: '/mock/example.png' },
-]
-
-// Mock slides
-const mockSlides = [
-  { id: '1', caption: 'My fitness journey', isLocked: true, imageUrl: null },
-  { id: '2', caption: 'Workout tips & tricks', isLocked: true, imageUrl: null },
-]
+import { Heart, LayoutGrid, DollarSign, MessageCircle, UserPlus } from 'lucide-react'
+import { creatorsApi } from '@/lib/api/creators'
+import { productsApi } from '@/lib/api/products'
+import { followsApi } from '@/lib/api/follows'
+import { CreatorProfile, Post } from '@/lib/types'
+import { Product } from '@/lib/api/products'
 
 export default function CreatorProfilePage() {
   const { user, loading } = useAuth()
   const router = useRouter()
   const params = useParams()
+  const username = params.username as string
+  
   const [activeTab, setActiveTab] = useState<'posts' | 'slides' | 'products'>('posts')
-  const [isSubscribed, setIsSubscribed] = useState(mockCreator.isSubscribed)
-  const [isFollowing, setIsFollowing] = useState(mockCreator.isFollowing)
+  const [creator, setCreator] = useState<CreatorProfile | null>(null)
+  const [posts, setPosts] = useState<Post[]>([])
+  const [products, setProducts] = useState<Product[]>([])
+  const [isFollowing, setIsFollowing] = useState(false)
+  const [loadingData, setLoadingData] = useState(true)
 
   useEffect(() => {
     if (!loading && !user) {
@@ -57,18 +29,57 @@ export default function CreatorProfilePage() {
     }
   }, [user, loading, router])
 
+  useEffect(() => {
+    const fetchCreatorData = async () => {
+      if (!username) return
+      
+      try {
+        setLoadingData(true)
+        const data = await creatorsApi.getByUsername(username)
+        setCreator(data.profile)
+        setPosts(data.posts || [])
+
+        // Fetch products
+        if (data.profile.id) {
+          const productData = await productsApi.listProducts(data.profile.id)
+          setProducts(productData)
+        }
+      } catch (error) {
+        console.error('Failed to load creator:', error)
+      } finally {
+        setLoadingData(false)
+      }
+    }
+
+    if (user) {
+      fetchCreatorData()
+    }
+  }, [username, user])
+
   const handleSubscribe = () => {
     console.log('Subscribe clicked')
-    // TODO: Navigate to subscription flow
+    router.push(`/subscriptions/${creator?.id}`)
   }
 
-  const handleFollow = () => {
-    setIsFollowing(!isFollowing)
-    console.log('Follow toggled')
+  const handleFollow = async () => {
+    if (!creator) return
+    
+    try {
+      if (isFollowing) {
+        await followsApi.unfollow(creator.id)
+      } else {
+        await followsApi.follow(creator.id)
+      }
+      setIsFollowing(!isFollowing)
+    } catch (error) {
+      console.error('Failed to toggle follow:', error)
+    }
   }
 
   const handleMessage = () => {
-    router.push(`/messages/${mockCreator.id}`)
+    if (creator) {
+      router.push(`/messages/${creator.userId}`)
+    }
   }
 
   const handleTip = () => {
@@ -76,10 +87,18 @@ export default function CreatorProfilePage() {
     // TODO: Open tip modal
   }
 
-  if (loading) {
+  if (loading || loadingData) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
+
+  if (!creator) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-gray-500">Creator not found</p>
       </div>
     )
   }
@@ -90,8 +109,8 @@ export default function CreatorProfilePage() {
       <div className="flex-1 overflow-y-auto pb-6 pt-16">
         {/* Cover Image / Banner */}
         <div className="relative mx-4 mb-4 rounded-3xl overflow-hidden h-96 bg-gradient-to-b from-gray-300 to-gray-500">
-          {mockCreator.coverImageUrl ? (
-            <img src={mockCreator.coverImageUrl} alt="Cover" className="w-full h-full object-cover" />
+          {creator.coverImageUrl ? (
+            <img src={creator.coverImageUrl} alt="Cover" className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full bg-gradient-to-b from-gray-200 to-gray-400" />
           )}
@@ -116,9 +135,9 @@ export default function CreatorProfilePage() {
           <div className="absolute bottom-6 left-6 right-6 text-center">
             <div className="flex items-center justify-center gap-2 mb-2">
               <h1 className="text-3xl font-bold text-white drop-shadow-lg">
-                {mockCreator.displayName}
+                {creator.displayName}
               </h1>
-              {mockCreator.isVerified && (
+              {creator.isVerified && (
                 <svg className="w-7 h-7 text-blue-500 drop-shadow-lg" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
                   <circle cx="12" cy="12" r="10" fill="currentColor"/>
@@ -127,18 +146,18 @@ export default function CreatorProfilePage() {
               )}
             </div>
             <p className="text-white text-base mb-4 drop-shadow-lg">
-              @{mockCreator.username}
+              @{creator.username}
             </p>
             
             {/* Stats */}
             <div className="flex items-center justify-center gap-6">
               <div className="flex items-center gap-2 text-white drop-shadow-lg">
                 <Heart className="w-5 h-5" strokeWidth={2} />
-                <span className="font-medium">{mockCreator.totalLikes} Likes</span>
+                <span className="font-medium">{creator.totalLikes} Likes</span>
               </div>
               <div className="flex items-center gap-2 text-white drop-shadow-lg">
                 <LayoutGrid className="w-5 h-5" strokeWidth={2} />
-                <span className="font-medium">{mockCreator.totalPosts} Posts</span>
+                <span className="font-medium">{creator.totalPosts} Posts</span>
               </div>
             </div>
           </div>
@@ -147,7 +166,7 @@ export default function CreatorProfilePage() {
         {/* Bio */}
         <div className="px-6 mb-6">
           <p className="text-center text-[15px] text-gray-700 leading-relaxed">
-            {mockCreator.bio}
+            {creator.bio}
           </p>
         </div>
 
@@ -222,7 +241,7 @@ export default function CreatorProfilePage() {
         {/* Content Grid */}
         <div className="px-4">
           <div className="grid grid-cols-2 gap-4">
-            {activeTab === 'posts' && mockPosts.map((post) => (
+            {activeTab === 'posts' && posts.map((post) => (
               <div
                 key={post.id}
                 className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-blue-100 to-blue-200 aspect-[3/4]"
@@ -278,7 +297,7 @@ export default function CreatorProfilePage() {
               </div>
             ))}
 
-            {activeTab === 'products' && mockProducts.map((product) => (
+            {activeTab === 'products' && products.map((product) => (
               <button
                 key={product.id}
                 onClick={() => router.push(`/products/${product.id}`)}

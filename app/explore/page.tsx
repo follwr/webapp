@@ -6,17 +6,41 @@ import { useRouter } from 'next/navigation'
 import { BottomNav } from '@/components/nav/bottom-nav'
 import { SlideCard } from '@/components/posts/slide-card'
 import { Search } from 'lucide-react'
+import { creatorsApi } from '@/lib/api/creators'
+import { CreatorProfile } from '@/lib/types'
 
 export default function ExplorePage() {
   const { user, loading } = useAuth()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState('Explore')
+  const [creators, setCreators] = useState<CreatorProfile[]>([])
+  const [loadingCreators, setLoadingCreators] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     if (!loading && !user) {
       router.push('/auth/login')
     }
   }, [user, loading, router])
+
+  useEffect(() => {
+    const fetchCreators = async () => {
+      try {
+        setLoadingCreators(true)
+        const data = await creatorsApi.listCreators(1, 20)
+        setCreators(data)
+      } catch (error) {
+        console.error('Failed to load creators:', error)
+        setCreators([])
+      } finally {
+        setLoadingCreators(false)
+      }
+    }
+
+    if (user) {
+      fetchCreators()
+    }
+  }, [user])
 
   if (loading) {
     return (
@@ -138,6 +162,8 @@ export default function ExplorePage() {
             <input
               type="text"
               placeholder="Search for a creator"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-12 pr-4 py-3 bg-gray-100 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -169,31 +195,59 @@ export default function ExplorePage() {
 
         {/* Creator List */}
         <div className="px-4">
-          <div className="space-y-4">
-            {[
-              { id: 1, name: 'Bronte Sheppeard', username: 'brontesheppeard' },
-              { id: 2, name: 'John Doe', username: 'johndoe' },
-              { id: 3, name: 'Jane Smith', username: 'janesmith' },
-              { id: 4, name: 'Mike Johnson', username: 'mikejohnson' },
-            ].map((creator) => (
-              <button
-                key={creator.id}
-                onClick={() => router.push(`/creators/${creator.username}`)}
-                className="w-full flex items-center justify-between py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-blue-400 rounded-full"></div>
-                  <div className="text-left">
-                    <p className="font-semibold text-gray-900">{creator.name}</p>
-                    <p className="text-sm text-gray-500">@{creator.username}</p>
-                  </div>
-                </div>
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            ))}
-          </div>
+          {loadingCreators ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {creators
+                .filter((creator) =>
+                  searchQuery
+                    ? creator.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      creator.username.toLowerCase().includes(searchQuery.toLowerCase())
+                    : true
+                )
+                .map((creator) => (
+                  <button
+                    key={creator.id}
+                    onClick={() => router.push(`/creators/${creator.username}`)}
+                    className="w-full flex items-center justify-between py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      {creator.profilePictureUrl ? (
+                        <img
+                          src={creator.profilePictureUrl}
+                          alt={creator.displayName}
+                          className="w-12 h-12 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 bg-blue-400 rounded-full flex items-center justify-center text-white font-semibold">
+                          {creator.displayName.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <div className="text-left">
+                        <div className="flex items-center gap-1">
+                          <p className="font-semibold text-gray-900">{creator.displayName}</p>
+                          {creator.isVerified && (
+                            <svg className="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-500">@{creator.username}</p>
+                      </div>
+                    </div>
+                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                ))}
+              {creators.length === 0 && !loadingCreators && (
+                <p className="text-center text-gray-500 py-8">No creators found</p>
+              )}
+            </div>
+          )}
         </div>
       </div>
       <BottomNav />
