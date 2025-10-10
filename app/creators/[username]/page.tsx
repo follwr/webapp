@@ -40,8 +40,8 @@ export default function CreatorProfilePage() {
         setPosts(data.posts || [])
 
         // Fetch products
-        if (data.profile.id) {
-          const productData = await productsApi.listProducts(data.profile.id)
+        if (data.id) {
+          const productData = await productsApi.listProducts(data.id)
           setProducts(productData)
         }
       } catch (error) {
