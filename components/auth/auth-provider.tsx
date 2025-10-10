@@ -30,7 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [creatorProfile, setCreatorProfile] = useState<CreatorProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
-  const supabase = createClient()
+  const supabase = useState(() => createClient())[0] // Create only once
 
   // Fetch creator profile
   const fetchCreatorProfile = async () => {
@@ -76,7 +76,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })
 
     return () => subscription.unsubscribe()
-  }, [supabase.auth])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const signOut = async () => {
     await supabase.auth.signOut()
