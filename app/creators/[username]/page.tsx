@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/components/auth/auth-provider'
 import { useRouter, useParams } from 'next/navigation'
-import { Heart, LayoutGrid, DollarSign, MessageCircle, UserPlus } from 'lucide-react'
+import { Heart, LayoutGrid, DollarSign, MessageCircle, UserPlus, Image as ImageIcon } from 'lucide-react'
 import { creatorsApi } from '@/lib/api/creators'
 import { productsApi } from '@/lib/api/products'
 import { followsApi } from '@/lib/api/follows'
@@ -258,7 +258,7 @@ export default function CreatorProfilePage() {
                   
                   {/* Caption */}
                   <p className="text-sm text-gray-700 text-center mb-4 line-clamp-2 px-2">
-                    {post.caption}
+                    {post.content || 'No caption'}
                   </p>
                   
                   {/* Follow Button */}
@@ -269,7 +269,7 @@ export default function CreatorProfilePage() {
               </div>
             ))}
 
-            {activeTab === 'slides' && mockSlides.map((slide) => (
+            {activeTab === 'slides' && posts.filter(p => p.mediaUrls && p.mediaUrls.length > 0).map((slide) => (
               <div
                 key={slide.id}
                 className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-blue-100 to-blue-200 aspect-[3/4]"
@@ -286,7 +286,7 @@ export default function CreatorProfilePage() {
                   
                   {/* Caption */}
                   <p className="text-sm text-gray-700 text-center mb-4 line-clamp-2 px-2">
-                    {slide.caption}
+                    {slide.content || 'No caption'}
                   </p>
                   
                   {/* Follow Button */}
@@ -306,9 +306,9 @@ export default function CreatorProfilePage() {
                 <div className="flex flex-col h-full">
                   {/* Product Image */}
                   <div className="flex-1 relative bg-gray-200">
-                    {product.imageUrl && (
+                    {product.productImageUrl && (
                       <img
-                        src={product.imageUrl}
+                        src={product.productImageUrl}
                         alt={product.title}
                         className="w-full h-full object-cover"
                       />

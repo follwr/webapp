@@ -21,7 +21,11 @@ export function PostCard({ post }: PostCardProps) {
 
   const handleLike = async () => {
     try {
-      await postsApi.toggleLike(post.id)
+      if (isLiked) {
+        await postsApi.unlikePost(post.id)
+      } else {
+        await postsApi.likePost(post.id)
+      }
       setIsLiked(!isLiked)
       setLikeCount(isLiked ? likeCount - 1 : likeCount + 1)
     } catch (err) {
