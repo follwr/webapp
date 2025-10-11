@@ -10,11 +10,11 @@ import { CreateModal } from './create-modal'
 
 export function BottomNav() {
   const pathname = usePathname()
-  const { user } = useAuth()
+  const { user, userProfile } = useAuth()
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
-  // Hide bottom nav on create pages
-  if (pathname?.startsWith('/create')) {
+  // Hide bottom nav on create and auth pages
+  if (pathname?.startsWith('/create') || pathname?.startsWith('/auth/')) {
     return null
   }
 
@@ -23,7 +23,7 @@ export function BottomNav() {
     { href: '/explore', icon: Search, label: 'Explore' },
     { href: '/create', icon: Plus, label: 'Create', isCreate: true },
     { href: '/messages', icon: Send, label: 'Messages' },
-    { href: '/profile', icon: User, label: 'Profile', isProfile: true },
+    { href: '/settings/profile', icon: User, label: 'Profile', isProfile: true },
   ]
 
   return (
@@ -32,7 +32,7 @@ export function BottomNav() {
         <div className="bg-white rounded-3xl shadow-lg border border-gray-200 px-6 py-3">
           <div className="flex items-center justify-around">
             {navItems.map((item) => {
-              const isActive = pathname === item.href
+              const isActive = pathname === item.href || (item.isProfile && pathname?.startsWith('/settings'))
               const Icon = item.icon
 
               if (item.isProfile) {
@@ -43,9 +43,9 @@ export function BottomNav() {
                     className="flex items-center justify-center p-2 rounded-xl transition-all hover:bg-gray-100"
                   >
                     <Avatar className="h-8 w-8 border-2" style={{ borderColor: isActive ? '#3075FF' : 'transparent' }}>
-                      <AvatarImage src={user?.user_metadata?.avatar_url} />
+                      <AvatarImage src={userProfile?.profilePictureUrl || user?.user_metadata?.avatar_url} />
                       <AvatarFallback className="bg-gray-200 text-gray-700 text-xs">
-                        {user?.email?.charAt(0).toUpperCase()}
+                        {(userProfile?.displayName || user?.email)?.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                   </Link>

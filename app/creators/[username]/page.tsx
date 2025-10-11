@@ -10,6 +10,7 @@ import { followsApi } from '@/lib/api/follows'
 import { CreatorProfile, Post } from '@/lib/types'
 import { Product } from '@/lib/api/products'
 import { PostCard } from '@/components/posts/post-card'
+import { getCreatorDisplayName, getCreatorUsername, getCreatorBio, getCreatorProfilePicture } from '@/lib/utils/profile'
 
 export default function CreatorProfilePage() {
   const { user, loading } = useAuth()
@@ -146,7 +147,7 @@ export default function CreatorProfilePage() {
           <div className="absolute bottom-6 left-6 right-6 text-center">
             <div className="flex items-center justify-center gap-2 mb-2">
               <h1 className="text-3xl font-bold text-white drop-shadow-lg">
-                {creator.displayName}
+                {getCreatorDisplayName(creator)}
               </h1>
               {creator.isVerified && (
                 <svg className="w-7 h-7 text-blue-500 drop-shadow-lg" viewBox="0 0 24 24" fill="currentColor">
@@ -157,7 +158,7 @@ export default function CreatorProfilePage() {
               )}
             </div>
             <p className="text-white text-base mb-4 drop-shadow-lg">
-              @{creator.username}
+              @{getCreatorUsername(creator)}
             </p>
             
             {/* Stats */}
@@ -175,11 +176,13 @@ export default function CreatorProfilePage() {
         </div>
 
         {/* Bio */}
-        <div className="px-6 mb-6">
-          <p className="text-center text-[15px] text-gray-700 leading-relaxed">
-            {creator.bio}
-          </p>
-        </div>
+        {getCreatorBio(creator) && (
+          <div className="px-6 mb-6">
+            <p className="text-center text-[15px] text-gray-700 leading-relaxed">
+              {getCreatorBio(creator)}
+            </p>
+          </div>
+        )}
 
         {/* Action Buttons */}
         <div className="px-6 mb-6 flex gap-3">

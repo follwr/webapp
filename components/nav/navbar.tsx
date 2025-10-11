@@ -25,14 +25,14 @@ import {
 } from 'lucide-react'
 
 export function Navbar() {
-  const { user, isCreator, signOut } = useAuth()
+  const { user, userProfile, isCreator, signOut } = useAuth()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const pathname = usePathname()
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen)
 
   // Hide navbar on specific pages
-  const hideNavbar = pathname === '/explore' || pathname?.startsWith('/create') || pathname?.startsWith('/messages') || pathname?.startsWith('/settings') || pathname?.startsWith('/subscriptions') || pathname?.startsWith('/banking') || pathname?.startsWith('/saved') || pathname?.startsWith('/purchased') || pathname?.startsWith('/products/')
+  const hideNavbar = pathname === '/explore' || pathname?.startsWith('/create') || pathname?.startsWith('/messages') || pathname?.startsWith('/settings') || pathname?.startsWith('/subscriptions') || pathname?.startsWith('/banking') || pathname?.startsWith('/saved') || pathname?.startsWith('/purchased') || pathname?.startsWith('/products/') || pathname?.startsWith('/auth/')
 
   if (hideNavbar) {
     return null
@@ -85,20 +85,20 @@ export function Navbar() {
                 <>
                   {/* User Info */}
                   <Link 
-                    href="/profile" 
+                    href="/settings/profile" 
                     onClick={toggleMenu}
                     className="flex items-center gap-4 mb-6"
                   >
                     <Avatar className="h-16 w-16">
-                      <AvatarImage src={user.user_metadata?.avatar_url} />
+                      <AvatarImage src={userProfile?.profilePictureUrl || user.user_metadata?.avatar_url} />
                       <AvatarFallback className="bg-blue-600 text-white text-xl">
-                        {user.email?.charAt(0).toUpperCase()}
+                        {(userProfile?.displayName || user.email)?.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 mb-0.5">
                         <p className="font-semibold text-xl text-gray-900 truncate">
-                          {user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'}
+                          {userProfile?.displayName || user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'}
                         </p>
                         {isCreator && (
                           <svg className="w-5 h-5 text-blue-500 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
@@ -109,7 +109,7 @@ export function Navbar() {
                         )}
                       </div>
                       <p className="text-sm text-gray-500 truncate">
-                        @{user.email?.split('@')[0] || 'username'}
+                        @{userProfile?.username || user.email?.split('@')[0] || 'username'}
                       </p>
                     </div>
                   </Link>

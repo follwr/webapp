@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button'
 import { PrimaryButton } from '@/components/ui/primary-button'
 import { BottomNav } from '@/components/nav/bottom-nav'
 import { UserPlus } from 'lucide-react'
+import { getCreatorDisplayName, getCreatorUsername, getCreatorProfilePicture } from '@/lib/utils/profile'
 
 export default function FeedPage() {
   const { user, isCreator, loading: authLoading } = useAuth()
@@ -156,24 +157,24 @@ export default function FeedPage() {
                     creators.slice(0, 6).map((creator) => (
                       <Link
                         key={creator.id}
-                        href={`/creators/${creator.username}`}
+                        href={`/creators/${getCreatorUsername(creator)}`}
                         className="flex-shrink-0 w-32"
                       >
                         <div className="w-32 h-32 rounded-2xl overflow-hidden mb-2 bg-gray-100">
-                          {creator.profilePictureUrl ? (
+                          {getCreatorProfilePicture(creator) ? (
                             <img
-                              src={creator.profilePictureUrl}
-                              alt={creator.displayName}
+                              src={getCreatorProfilePicture(creator)}
+                              alt={getCreatorDisplayName(creator)}
                               className="w-full h-full object-cover"
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center bg-blue-400 text-white text-2xl font-bold">
-                              {creator.displayName.charAt(0).toUpperCase()}
+                              {getCreatorDisplayName(creator).charAt(0).toUpperCase()}
                             </div>
                           )}
                         </div>
-                        <p className="font-semibold text-sm truncate">{creator.displayName}</p>
-                        <p className="text-xs text-gray-500 truncate">@{creator.username}</p>
+                        <p className="font-semibold text-sm truncate">{getCreatorDisplayName(creator)}</p>
+                        <p className="text-xs text-gray-500 truncate">@{getCreatorUsername(creator)}</p>
                       </Link>
                     ))
                   )}
@@ -286,24 +287,24 @@ export default function FeedPage() {
           creators.slice(0, 6).map((creator) => (
             <Link
               key={creator.id}
-              href={`/creators/${creator.username}`}
+              href={`/creators/${getCreatorUsername(creator)}`}
               className="flex-shrink-0 w-32"
             >
               <div className="w-32 h-32 rounded-2xl overflow-hidden mb-2 bg-gray-100">
-                {creator.profilePictureUrl ? (
+                {getCreatorProfilePicture(creator) ? (
                   <img
-                    src={creator.profilePictureUrl}
-                    alt={creator.displayName}
+                    src={getCreatorProfilePicture(creator)}
+                    alt={getCreatorDisplayName(creator)}
                     className="w-full h-full object-cover"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-blue-400 text-white text-2xl font-bold">
-                    {creator.displayName.charAt(0).toUpperCase()}
+                    {getCreatorDisplayName(creator).charAt(0).toUpperCase()}
                   </div>
                 )}
               </div>
-              <p className="font-semibold text-sm truncate">{creator.displayName}</p>
-              <p className="text-xs text-gray-500 truncate">@{creator.username}</p>
+              <p className="font-semibold text-sm truncate">{getCreatorDisplayName(creator)}</p>
+              <p className="text-xs text-gray-500 truncate">@{getCreatorUsername(creator)}</p>
             </Link>
           ))
         )}

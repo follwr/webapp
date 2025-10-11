@@ -5,27 +5,32 @@ import { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { creatorsApi } from '@/lib/api/creators'
+import { usersApi, UserProfile } from '@/lib/api/users'
 import { setApiToken } from '@/lib/api/client'
 import { CreatorProfile } from '@/lib/types'
 
 type AuthContextType = {
   user: User | null
+  userProfile: UserProfile | null
   creatorProfile: CreatorProfile | null
   isCreator: boolean
   loading: boolean
   accessToken: string | null
   signOut: () => Promise<void>
   refreshCreatorProfile: () => Promise<void>
+  refreshUserProfile: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
+  userProfile: null,
   creatorProfile: null,
   isCreator: false,
   loading: true,
   accessToken: null,
   signOut: async () => {},
   refreshCreatorProfile: async () => {},
+  refreshUserProfile: async () => {},
 })
 
 // Module-level variable to prevent double initialization
@@ -33,11 +38,23 @@ let sharedInitRef: React.MutableRefObject<boolean> | null = null
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [creatorProfile, setCreatorProfile] = useState<CreatorProfile | null>(null)
   const [accessToken, setAccessToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
   const supabase = useState(() => createClient())[0] // Create only once
+
+  // Fetch user profile
+  const fetchUserProfile = async () => {
+    try {
+      const profile = await usersApi.getMyProfile()
+      setUserProfile(profile)
+    } catch (error) {
+      // User doesn't have a profile yet
+      setUserProfile(null)
+    }
+  }
 
   // Fetch creator profile
   const fetchCreatorProfile = async () => {
@@ -52,6 +69,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshCreatorProfile = async () => {
     await fetchCreatorProfile()
+  }
+
+  const refreshUserProfile = async () => {
+    await fetchUserProfile()
   }
 
   useEffect(() => {
@@ -76,10 +97,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setApiToken(token) // Update API client token
       setLoading(false)
 
-      // Fetch creator profile if user changed
+      // Fetch profiles if user changed
       const nextUserId = nextUser?.id ?? null
       if (nextUserId && lastUserIdRef.current !== nextUserId) {
         lastUserIdRef.current = nextUserId
+        // Fetch both user profile and creator profile (non-blocking)
+        fetchUserProfile()
         fetchCreatorProfile()
       }
     }
@@ -95,12 +118,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setApiToken(token) // Update API client token
       setLoading(false)
 
-      // Fetch creator profile if user changed
+      // Fetch profiles if user changed
       const nextUserId = nextUser?.id ?? null
       if (nextUserId && lastUserIdRef.current !== nextUserId) {
         lastUserIdRef.current = nextUserId
+        fetchUserProfile()
         fetchCreatorProfile()
       } else if (!nextUserId) {
+        setUserProfile(null)
         setCreatorProfile(null)
       }
     })
@@ -111,6 +136,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut()
+    setUserProfile(null)
     setCreatorProfile(null)
     setAccessToken(null)
     setApiToken(null) // Clear API client token
@@ -120,7 +146,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isCreator = !!creatorProfile
 
   return (
-    <AuthContext.Provider value={{ user, creatorProfile, isCreator, loading, accessToken, signOut, refreshCreatorProfile }}>
+    <AuthContext.Provider value={{ user, userProfile, creatorProfile, isCreator, loading, accessToken, signOut, refreshCreatorProfile, refreshUserProfile }}>
       {children}
     </AuthContext.Provider>
   )

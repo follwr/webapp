@@ -8,6 +8,7 @@ import { SlideCard } from '@/components/posts/slide-card'
 import { Search } from 'lucide-react'
 import { creatorsApi } from '@/lib/api/creators'
 import { CreatorProfile } from '@/lib/types'
+import { getCreatorDisplayName, getCreatorUsername, getCreatorProfilePicture } from '@/lib/utils/profile'
 
 export default function ExplorePage() {
   const { user, loading } = useAuth()
@@ -220,31 +221,31 @@ export default function ExplorePage() {
               {creators.map((creator) => (
                   <button
                     key={creator.id}
-                    onClick={() => router.push(`/creators/${creator.username}`)}
+                    onClick={() => router.push(`/creators/${getCreatorUsername(creator)}`)}
                     className="w-full flex items-center justify-between py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      {creator.profilePictureUrl ? (
+                      {getCreatorProfilePicture(creator) ? (
                         <img
-                          src={creator.profilePictureUrl}
-                          alt={creator.displayName}
+                          src={getCreatorProfilePicture(creator)}
+                          alt={getCreatorDisplayName(creator)}
                           className="w-12 h-12 rounded-full object-cover"
                         />
                       ) : (
                         <div className="w-12 h-12 bg-blue-400 rounded-full flex items-center justify-center text-white font-semibold">
-                          {creator.displayName.charAt(0).toUpperCase()}
+                          {getCreatorDisplayName(creator).charAt(0).toUpperCase()}
                         </div>
                       )}
                       <div className="text-left">
                         <div className="flex items-center gap-1">
-                          <p className="font-semibold text-gray-900">{creator.displayName}</p>
+                          <p className="font-semibold text-gray-900">{getCreatorDisplayName(creator)}</p>
                           {creator.isVerified && (
                             <svg className="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
                               <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                           )}
                         </div>
-                        <p className="text-sm text-gray-500">@{creator.username}</p>
+                        <p className="text-sm text-gray-500">@{getCreatorUsername(creator)}</p>
                       </div>
                     </div>
                     <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

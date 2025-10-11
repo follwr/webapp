@@ -7,6 +7,7 @@ import { Eye, Image as ImageIcon, Video as VideoIcon, DollarSign, X } from 'luci
 import { PrimaryButton } from '@/components/ui/primary-button'
 import { postsApi } from '@/lib/api/posts'
 import { uploadApi } from '@/lib/api/upload'
+import { getCreatorDisplayName, getCreatorUsername, getCreatorProfilePicture } from '@/lib/utils/profile'
 
 interface MediaFile {
   id: string
@@ -21,7 +22,7 @@ interface CreatePostFormProps {
 }
 
 export function CreatePostForm({ onPostCreated, compact = false }: CreatePostFormProps) {
-  const { user, creatorProfile } = useAuth()
+  const { user, userProfile, creatorProfile } = useAuth()
   const [postContent, setPostContent] = useState('')
   const [isPosting, setIsPosting] = useState(false)
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([])
@@ -117,22 +118,26 @@ export function CreatePostForm({ onPostCreated, compact = false }: CreatePostFor
     }
   }
 
+  const displayName = getCreatorDisplayName(creatorProfile) || userProfile?.displayName || 'User'
+  const username = getCreatorUsername(creatorProfile) || userProfile?.username || 'username'
+  const profilePicture = getCreatorProfilePicture(creatorProfile) || userProfile?.profilePictureUrl
+
   return (
     <div className={`bg-white rounded-2xl border border-gray-200 ${compact ? 'p-4' : 'p-6'}`}>
       {/* User Info */}
       <div className="flex items-start gap-3 mb-4">
         <Avatar className="h-10 w-10">
-          <AvatarImage src={creatorProfile?.profilePictureUrl} />
+          <AvatarImage src={profilePicture} />
           <AvatarFallback className="bg-gray-200 text-gray-700">
-            {creatorProfile?.displayName?.charAt(0).toUpperCase() || 'C'}
+            {displayName.charAt(0).toUpperCase()}
           </AvatarFallback>
         </Avatar>
         <div className="flex-1">
           <h3 className="font-semibold text-gray-900 text-sm">
-            {creatorProfile?.displayName || 'Creator'}
+            {displayName}
           </h3>
           <p className="text-xs text-gray-500">
-            @{creatorProfile?.username || 'username'}
+            @{username}
           </p>
         </div>
         

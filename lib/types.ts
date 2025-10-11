@@ -6,23 +6,38 @@ export interface User {
   created_at: string
 }
 
-export interface CreatorProfile {
+export interface UserProfile {
   id: string
   userId: string
   displayName: string
   username: string
   bio?: string
   profilePictureUrl?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreatorProfile {
+  id: string
+  userProfileId: string
   coverImageUrl?: string
   isVerified: boolean
   isFollowing?: boolean
   subscriptionPrice?: number
+  stripePriceId?: string
+  stripeAccountId?: string
   totalEarnings: number
   totalSubscribers: number
   totalPosts: number
   totalLikes: number
   createdAt: string
   updatedAt: string
+  userProfile?: UserProfile
+  // Legacy fields for backward compatibility (will be removed)
+  displayName?: string
+  username?: string
+  bio?: string
+  profilePictureUrl?: string
 }
 
 export interface Post {

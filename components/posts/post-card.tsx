@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Heart, MessageCircle, Info, Share2, Bookmark, MoreVertical, CheckCircle2 } from 'lucide-react'
 import { postsApi } from '@/lib/api/posts'
 import { formatDistanceToNow } from 'date-fns'
+import { getCreatorDisplayName, getCreatorUsername, getCreatorProfilePicture } from '@/lib/utils/profile'
 
 interface PostCardProps {
   post: Post
@@ -36,31 +37,35 @@ export function PostCard({ post }: PostCardProps) {
     // TODO: Implement save API call
   }
 
+  const creatorDisplayName = getCreatorDisplayName(post.creator)
+  const creatorUsername = getCreatorUsername(post.creator)
+  const creatorProfilePicture = getCreatorProfilePicture(post.creator)
+
   return (
     <div className="bg-white border-b border-gray-100">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3">
         <Link 
-          href={`/creators/${post.creator?.username}`}
+          href={`/creators/${creatorUsername}`}
           className="flex items-center gap-3"
         >
           <Avatar className="h-10 w-10">
-            <AvatarImage src={post.creator?.profilePictureUrl} />
+            <AvatarImage src={creatorProfilePicture} />
             <AvatarFallback className="bg-gray-200 text-gray-700">
-              {post.creator?.displayName?.charAt(0) || 'U'}
+              {creatorDisplayName.charAt(0)}
             </AvatarFallback>
           </Avatar>
           <div>
             <div className="flex items-center gap-1">
               <p className="font-semibold text-gray-900 text-sm">
-                {post.creator?.displayName}
+                {creatorDisplayName}
               </p>
               {post.creator?.isVerified && (
                 <CheckCircle2 className="h-4 w-4 text-blue-500 fill-blue-500" />
               )}
             </div>
             <p className="text-xs text-gray-500">
-              @{post.creator?.username}
+              @{creatorUsername}
             </p>
           </div>
         </Link>
@@ -131,10 +136,10 @@ export function PostCard({ post }: PostCardProps) {
         <div className="px-4 pb-3">
           <p className="text-sm text-gray-900">
             <Link 
-              href={`/creators/${post.creator?.username}`}
+              href={`/creators/${creatorUsername}`}
               className="font-semibold hover:underline"
             >
-              {post.creator?.displayName}
+              {creatorDisplayName}
             </Link>{' '}
             <span className="whitespace-pre-wrap">{post.content}</span>
           </p>

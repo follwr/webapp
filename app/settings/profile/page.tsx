@@ -5,15 +5,19 @@ import { useAuth } from '@/components/auth/auth-provider'
 import { useRouter } from 'next/navigation'
 import { ChevronLeft } from 'lucide-react'
 import { PrimaryButton } from '@/components/ui/primary-button'
+import { usersApi } from '@/lib/api/users'
+import { uploadApi } from '@/lib/api/upload'
 
 export default function ProfileSettingsPage() {
-  const { user, creatorProfile, loading } = useAuth()
+  const { user, userProfile, loading, refreshUserProfile } = useAuth()
   const router = useRouter()
   const [profilePicture, setProfilePicture] = useState<string | null>(null)
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null)
   const [fullName, setFullName] = useState('')
   const [username, setUsername] = useState('')
   const [description, setDescription] = useState('')
   const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -21,25 +25,27 @@ export default function ProfileSettingsPage() {
       router.push('/auth/login')
     }
 
-    // Load user data
-    if (user) {
+    // Load user profile data if available
+    if (userProfile) {
+      setFullName(userProfile.displayName || '')
+      setUsername(userProfile.username || '')
+      setDescription(userProfile.bio || '')
+      setProfilePicture(userProfile.profilePictureUrl || null)
+    } else if (user) {
+      // Fallback to Supabase user metadata if no user profile yet
       setFullName(user.user_metadata?.full_name || '')
       setUsername(user.email?.split('@')[0] || '')
       setProfilePicture(user.user_metadata?.avatar_url || null)
     }
-
-    // Load creator profile data if available
-    if (creatorProfile) {
-      setFullName(creatorProfile.displayName || '')
-      setUsername(creatorProfile.username || '')
-      setDescription(creatorProfile.bio || '')
-      setProfilePicture(creatorProfile.profilePictureUrl || null)
-    }
-  }, [user, creatorProfile, loading, router])
+  }, [user, userProfile, loading, router])
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
+      // Store the file for upload
+      setProfileImageFile(file)
+      
+      // Create preview
       const reader = new FileReader()
       reader.onloadend = () => {
         setProfilePicture(reader.result as string)
@@ -50,22 +56,64 @@ export default function ProfileSettingsPage() {
 
   const handleSave = async () => {
     if (!fullName.trim()) {
-      alert('Please enter your full name')
+      setError('Please enter your full name')
       return
     }
     if (!username.trim()) {
-      alert('Please enter a username')
+      setError('Please enter a username')
       return
     }
 
     setIsSaving(true)
-    // TODO: API call to update profile
-    console.log('Saving profile:', { fullName, username, description, profilePicture })
-    
-    setTimeout(() => {
-      setIsSaving(false)
+    setError(null)
+
+    try {
+      let profilePictureUrl = userProfile?.profilePictureUrl
+
+      // Upload new image if one was selected
+      if (profileImageFile) {
+        try {
+          profilePictureUrl = await uploadApi.uploadProfileImageComplete(profileImageFile, 'profile')
+        } catch (uploadError) {
+          console.error('Image upload failed:', uploadError)
+          setError('Failed to upload image. Please try again.')
+          setIsSaving(false)
+          return
+        }
+      }
+
+      const profileData = {
+        displayName: fullName,
+        username: username,
+        bio: description || undefined,
+        profilePictureUrl: profilePictureUrl || undefined,
+      }
+
+      // Create or update user profile
+      if (userProfile) {
+        // Update existing profile
+        await usersApi.updateProfile(profileData)
+      } else {
+        // Create new profile (first time setup)
+        await usersApi.createProfile({
+          displayName: fullName,
+          username: username,
+          bio: description || undefined,
+          profilePictureUrl: profilePictureUrl || undefined,
+        })
+      }
+
+      // Refresh the user profile in auth context
+      await refreshUserProfile()
+
+      // Navigate back
       router.back()
-    }, 1000)
+    } catch (err: any) {
+      console.error('Failed to save profile:', err)
+      setError(err?.response?.data?.message || 'Failed to save profile. Please try again.')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   if (loading) {
@@ -94,6 +142,13 @@ export default function ProfileSettingsPage() {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto pb-24">
+        {/* Error Message */}
+        {error && (
+          <div className="mx-6 mt-6 mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+            {error}
+          </div>
+        )}
+
         {/* Profile Picture Banner */}
         <div className="mx-6 mt-6 mb-6">
           <div className="relative w-full h-96 rounded-3xl overflow-hidden bg-gradient-to-b from-gray-200 to-gray-400">
@@ -177,13 +232,13 @@ export default function ProfileSettingsPage() {
 
       {/* Fixed Bottom Button */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4">
-        <PrimaryButton
-          onClick={handleSave}
-          disabled={isSaving}
-          className="w-full text-base py-3.5"
-        >
-          {isSaving ? 'Saving...' : 'Save changes'}
-        </PrimaryButton>
+          <PrimaryButton
+            onClick={handleSave}
+            disabled={isSaving}
+            className="w-full text-base py-3.5"
+          >
+            {isSaving ? 'Updating...' : 'Update'}
+          </PrimaryButton>
       </div>
     </div>
   )

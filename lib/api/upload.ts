@@ -43,5 +43,12 @@ export const uploadApi = {
     await uploadApi.uploadFile(signedUrl, file)
     return publicUrl
   },
+
+  // Complete upload flow for profile/cover images
+  uploadProfileImageComplete: async (file: File, uploadType: 'profile' | 'cover') => {
+    const { signedUrl, publicUrl } = await uploadApi.requestProfileUpload(file.type, file.name, uploadType)
+    await uploadApi.uploadFile(signedUrl, file)
+    return publicUrl
+  },
 }
 
