@@ -15,6 +15,7 @@ export interface CreatorProfile {
   profilePictureUrl?: string
   coverImageUrl?: string
   isVerified: boolean
+  isFollowing?: boolean
   subscriptionPrice?: number
   totalEarnings: number
   totalSubscribers: number
@@ -31,6 +32,7 @@ export interface Post {
   mediaUrls?: string[]
   isPublic: boolean
   requiresTier?: string
+  price?: number
   totalLikes: number
   totalComments: number
   totalViews: number
@@ -71,4 +73,5 @@ export interface ApiResponse<T> {
   data: T
   message?: string
 }
+
 

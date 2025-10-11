@@ -3,11 +3,8 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Post } from '@/lib/types'
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Heart, MessageCircle, Eye } from 'lucide-react'
+import { Heart, MessageCircle, Info, Share2, Bookmark, MoreVertical, CheckCircle2 } from 'lucide-react'
 import { postsApi } from '@/lib/api/posts'
 import { formatDistanceToNow } from 'date-fns'
 
@@ -18,6 +15,7 @@ interface PostCardProps {
 export function PostCard({ post }: PostCardProps) {
   const [isLiked, setIsLiked] = useState(post.isLiked || false)
   const [likeCount, setLikeCount] = useState(post.totalLikes)
+  const [isSaved, setIsSaved] = useState(false)
 
   const handleLike = async () => {
     try {
@@ -33,78 +31,115 @@ export function PostCard({ post }: PostCardProps) {
     }
   }
 
+  const handleSave = () => {
+    setIsSaved(!isSaved)
+    // TODO: Implement save API call
+  }
+
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <Link 
-            href={`/creators/${post.creator?.username}`}
-            className="flex items-center gap-3"
-          >
-            <Avatar>
-              <AvatarImage src={post.creator?.profilePictureUrl} />
-              <AvatarFallback>
-                {post.creator?.displayName?.charAt(0) || 'U'}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <p className="font-semibold">{post.creator?.displayName}</p>
-              <p className="text-sm text-muted-foreground">
-                @{post.creator?.username}
-              </p>
-            </div>
-          </Link>
-          <div className="flex items-center gap-2">
-            {!post.isPublic && (
-              <Badge variant="secondary">Subscribers Only</Badge>
-            )}
-            <span className="text-sm text-muted-foreground">
-              {post.publishedAt && formatDistanceToNow(new Date(post.publishedAt), { addSuffix: true })}
-            </span>
-          </div>
-        </div>
-      </CardHeader>
-
-      <CardContent>
-        {post.content && (
-          <p className="text-base mb-4 whitespace-pre-wrap">{post.content}</p>
-        )}
-        
-        {post.mediaUrls && post.mediaUrls.length > 0 && (
-          <div className="grid grid-cols-2 gap-2 rounded-lg overflow-hidden">
-            {post.mediaUrls.map((url, index) => (
-              <img
-                key={index}
-                src={url}
-                alt={`Post media ${index + 1}`}
-                className="w-full h-64 object-cover"
-              />
-            ))}
-          </div>
-        )}
-      </CardContent>
-
-      <CardFooter className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleLike}
-          className={isLiked ? 'text-red-500' : ''}
+    <div className="bg-white border-b border-gray-100">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3">
+        <Link 
+          href={`/creators/${post.creator?.username}`}
+          className="flex items-center gap-3"
         >
-          <Heart className={`h-4 w-4 mr-1 ${isLiked ? 'fill-current' : ''}`} />
-          {likeCount}
-        </Button>
+          <Avatar className="h-10 w-10">
+            <AvatarImage src={post.creator?.profilePictureUrl} />
+            <AvatarFallback className="bg-gray-200 text-gray-700">
+              {post.creator?.displayName?.charAt(0) || 'U'}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <div className="flex items-center gap-1">
+              <p className="font-semibold text-gray-900 text-sm">
+                {post.creator?.displayName}
+              </p>
+              {post.creator?.isVerified && (
+                <CheckCircle2 className="h-4 w-4 text-blue-500 fill-blue-500" />
+              )}
+            </div>
+            <p className="text-xs text-gray-500">
+              @{post.creator?.username}
+            </p>
+          </div>
+        </Link>
         
-        <Button variant="ghost" size="sm">
-          <MessageCircle className="h-4 w-4 mr-1" />
-          {post.totalComments}
-        </Button>
-        
-        <Button variant="ghost" size="sm">
-          <Eye className="h-4 w-4 mr-1" />
-          {post.totalViews}
-        </Button>
-      </CardFooter>
-    </Card>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-gray-500 flex items-center gap-1">
+            {post.publishedAt && formatDistanceToNow(new Date(post.publishedAt), { addSuffix: true }).replace('about ', '')}
+          </span>
+          <button className="text-gray-600 hover:text-gray-900">
+            <MoreVertical className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Media */}
+      {post.mediaUrls && post.mediaUrls.length > 0 && (
+        <div className="w-full">
+          <img
+            src={post.mediaUrls[0]}
+            alt="Post media"
+            className="w-full object-cover"
+            style={{ maxHeight: '600px' }}
+          />
+        </div>
+      )}
+
+      {/* Actions */}
+      <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={handleLike}
+            className="flex items-center gap-2 text-gray-700 hover:text-gray-900"
+          >
+            <Heart 
+              className={`h-6 w-6 ${isLiked ? 'fill-red-500 text-red-500' : ''}`}
+            />
+            <span className="text-sm font-medium">{likeCount}</span>
+          </button>
+          
+          <button className="flex items-center gap-2 text-gray-700 hover:text-gray-900">
+            <MessageCircle className="h-6 w-6" />
+            <span className="text-sm font-medium">{post.totalComments || 0}</span>
+          </button>
+          
+          {post.price && post.price > 0 && (
+            <button className="flex items-center gap-2 text-gray-700 hover:text-gray-900">
+              <Info className="h-6 w-6" />
+            </button>
+          )}
+        </div>
+
+        <div className="flex items-center gap-4">
+          <button className="text-gray-700 hover:text-gray-900">
+            <Share2 className="h-6 w-6" />
+          </button>
+          
+          <button 
+            onClick={handleSave}
+            className="text-gray-700 hover:text-gray-900"
+          >
+            <Bookmark className={`h-6 w-6 ${isSaved ? 'fill-current' : ''}`} />
+          </button>
+        </div>
+      </div>
+
+      {/* Caption */}
+      {post.content && (
+        <div className="px-4 pb-3">
+          <p className="text-sm text-gray-900">
+            <Link 
+              href={`/creators/${post.creator?.username}`}
+              className="font-semibold hover:underline"
+            >
+              {post.creator?.displayName}
+            </Link>{' '}
+            <span className="whitespace-pre-wrap">{post.content}</span>
+          </p>
+        </div>
+      )}
+    </div>
   )
 }

@@ -9,6 +9,7 @@ import { productsApi } from '@/lib/api/products'
 import { followsApi } from '@/lib/api/follows'
 import { CreatorProfile, Post } from '@/lib/types'
 import { Product } from '@/lib/api/products'
+import { PostCard } from '@/components/posts/post-card'
 
 export default function CreatorProfilePage() {
   const { user, loading } = useAuth()
@@ -21,6 +22,7 @@ export default function CreatorProfilePage() {
   const [posts, setPosts] = useState<Post[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [isFollowing, setIsFollowing] = useState(false)
+  const [isHoveringFollow, setIsHoveringFollow] = useState(false)
   const [loadingData, setLoadingData] = useState(true)
 
   useEffect(() => {
@@ -37,7 +39,16 @@ export default function CreatorProfilePage() {
         setLoadingData(true)
         const data = await creatorsApi.getByUsername(username)
         setCreator(data)
-        setPosts(data.posts || [])
+        
+        // Ensure all posts have the creator field populated
+        const postsWithCreator = (data.posts || []).map(post => ({
+          ...post,
+          creator: data
+        }))
+        setPosts(postsWithCreator)
+        
+        // Set follow status from backend response
+        setIsFollowing(data.isFollowing || false)
 
         // Fetch products
         if (data.id) {
@@ -182,13 +193,15 @@ export default function CreatorProfilePage() {
           
           <button
             onClick={handleFollow}
+            onMouseEnter={() => setIsHoveringFollow(true)}
+            onMouseLeave={() => setIsHoveringFollow(false)}
             className={`flex-1 px-6 py-3.5 font-semibold rounded-full transition-colors ${
               isFollowing
-                ? 'bg-gray-200 hover:bg-gray-300 text-gray-900'
+                ? 'bg-gray-200 hover:bg-red-500 hover:text-white text-gray-900'
                 : 'bg-white hover:bg-gray-50 border-2 border-gray-300 text-gray-900'
             }`}
           >
-            {isFollowing ? 'Following' : 'Follow'}
+            {isFollowing ? (isHoveringFollow ? 'Unfollow' : 'Following') : 'Follow'}
           </button>
         </div>
 
@@ -238,98 +251,111 @@ export default function CreatorProfilePage() {
           </button>
         </div>
 
-        {/* Content Grid */}
+        {/* Content Grid or Feed */}
         <div className="px-4">
-          <div className="grid grid-cols-2 gap-4">
-            {activeTab === 'posts' && posts.map((post) => (
-              <div
-                key={post.id}
-                className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-blue-100 to-blue-200 aspect-[3/4]"
-              >
-                <div className="flex flex-col items-center justify-center h-full p-6">
-                  {/* Lock Icon */}
-                  <div className="w-24 h-24 mb-4">
-                    <div className="w-24 h-24 rounded-full bg-blue-300/50 flex items-center justify-center">
-                      <div className="w-16 h-16 rounded-2xl bg-blue-400/60 flex items-center justify-center">
-                        <ImageIcon className="w-8 h-8 text-blue-600/40" strokeWidth={1.5} />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Caption */}
-                  <p className="text-sm text-gray-700 text-center mb-4 line-clamp-2 px-2">
-                    {post.content || 'No caption'}
-                  </p>
-                  
-                  {/* Follow Button */}
-                  <button className="px-6 py-2 bg-white hover:bg-gray-50 text-gray-900 font-medium rounded-full transition-colors shadow-sm text-sm">
-                    Follow
-                  </button>
-                </div>
+          {activeTab === 'posts' && isFollowing ? (
+            // Feed view for followed creators
+            <div className="max-w-2xl mx-auto">
+              <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+                {posts.map((post) => (
+                  <PostCard key={post.id} post={post} />
+                ))}
               </div>
-            ))}
-
-            {activeTab === 'slides' && posts.filter(p => p.mediaUrls && p.mediaUrls.length > 0).map((slide) => (
-              <div
-                key={slide.id}
-                className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-blue-100 to-blue-200 aspect-[3/4]"
-              >
-                <div className="flex flex-col items-center justify-center h-full p-6">
-                  {/* Lock Icon */}
-                  <div className="w-24 h-24 mb-4">
-                    <div className="w-24 h-24 rounded-full bg-blue-300/50 flex items-center justify-center">
-                      <div className="w-16 h-16 rounded-2xl bg-blue-400/60 flex items-center justify-center">
-                        <ImageIcon className="w-8 h-8 text-blue-600/40" strokeWidth={1.5} />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Caption */}
-                  <p className="text-sm text-gray-700 text-center mb-4 line-clamp-2 px-2">
-                    {slide.content || 'No caption'}
-                  </p>
-                  
-                  {/* Follow Button */}
-                  <button className="px-6 py-2 bg-white hover:bg-gray-50 text-gray-900 font-medium rounded-full transition-colors shadow-sm text-sm">
-                    Follow
-                  </button>
+              {posts.length === 0 && (
+                <div className="text-center py-12">
+                  <p className="text-gray-500">No posts yet</p>
                 </div>
-              </div>
-            ))}
-
-            {activeTab === 'products' && products.map((product) => (
-              <button
-                key={product.id}
-                onClick={() => router.push(`/products/${product.id}`)}
-                className="relative rounded-3xl overflow-hidden bg-white border border-gray-100 aspect-[3/4] hover:shadow-lg transition-shadow"
-              >
-                <div className="flex flex-col h-full">
-                  {/* Product Image */}
-                  <div className="flex-1 relative bg-gray-200">
-                    {product.productImageUrl && (
+              )}
+            </div>
+          ) : (
+            // Grid view for non-followed creators
+            <div className="grid grid-cols-2 gap-4">
+              {activeTab === 'posts' && posts.map((post) => (
+                <button
+                  key={post.id}
+                  onClick={() => router.push(`/saved/${post.id}`)}
+                  className="relative rounded-3xl overflow-hidden aspect-[3/4] group"
+                >
+                  {post.mediaUrls && post.mediaUrls.length > 0 ? (
+                    <>
                       <img
-                        src={product.productImageUrl}
-                        alt={product.title}
+                        src={post.mediaUrls[0]}
+                        alt={post.content || 'Post'}
                         className="w-full h-full object-cover"
                       />
-                    )}
-                  </div>
-                  
-                  {/* Product Info */}
-                  <div className="bg-white p-4">
-                    <p className="text-sm text-gray-900 mb-3 line-clamp-2 font-medium text-left">
-                      {product.title}
-                    </p>
+                      {/* Overlay on hover */}
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                    </>
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-blue-100 to-blue-200 flex flex-col items-center justify-center p-6">
+                      {/* Lock Icon for posts without media */}
+                      <div className="w-24 h-24 mb-4">
+                        <div className="w-24 h-24 rounded-full bg-blue-300/50 flex items-center justify-center">
+                          <div className="w-16 h-16 rounded-2xl bg-blue-400/60 flex items-center justify-center">
+                            <ImageIcon className="w-8 h-8 text-blue-600/40" strokeWidth={1.5} />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Caption */}
+                      <p className="text-sm text-gray-700 text-center line-clamp-3 px-2">
+                        {post.content || 'No caption'}
+                      </p>
+                    </div>
+                  )}
+                </button>
+              ))}
+
+              {activeTab === 'slides' && posts.filter(p => p.mediaUrls && p.mediaUrls.length > 0).map((slide) => (
+                <button
+                  key={slide.id}
+                  onClick={() => router.push(`/saved/${slide.id}`)}
+                  className="relative rounded-3xl overflow-hidden aspect-[3/4] group"
+                >
+                  <img
+                    src={slide.mediaUrls![0]}
+                    alt={slide.content || 'Slide'}
+                    className="w-full h-full object-cover"
+                  />
+                  {/* Overlay on hover */}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                </button>
+              ))}
+
+              {activeTab === 'products' && products.map((product) => (
+                <button
+                  key={product.id}
+                  onClick={() => router.push(`/products/${product.id}`)}
+                  className="relative rounded-3xl overflow-hidden bg-white border border-gray-100 aspect-[3/4] hover:shadow-lg transition-shadow"
+                >
+                  <div className="flex flex-col h-full">
+                    {/* Product Image */}
+                    <div className="flex-1 relative bg-gray-200">
+                      {product.productImageUrl && (
+                        <img
+                          src={product.productImageUrl}
+                          alt={product.title}
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+                    </div>
                     
-                    {/* Buy Button */}
-                    <span className="block w-full px-4 py-2 bg-white border border-gray-300 text-gray-900 font-medium rounded-full text-sm">
-                      Buy ${product.price}
-                    </span>
+                    {/* Product Info */}
+                    <div className="bg-white p-4">
+                      <p className="text-sm text-gray-900 mb-3 line-clamp-2 font-medium text-left">
+                        {product.title}
+                      </p>
+                      
+                      {/* Buy Button */}
+                      <span className="block w-full px-4 py-2 bg-white border border-gray-300 text-gray-900 font-medium rounded-full text-sm">
+                        Buy ${product.price}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </button>
-            ))}
-          </div>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

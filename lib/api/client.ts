@@ -1,5 +1,4 @@
 import axios from 'axios'
-import { createClient } from '@/lib/supabase/client'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://backend-production-1eee.up.railway.app'
 
@@ -10,15 +9,22 @@ export const apiClient = axios.create({
   },
 })
 
+// Token storage - will be updated by AuthProvider
+let currentAccessToken: string | null = null
+
+// Function for AuthProvider to set the token
+export const setApiToken = (token: string | null) => {
+  currentAccessToken = token
+}
+
+// Function to get current token (for debugging)
+export const getApiToken = () => currentAccessToken
+
 // Add auth token to requests
-apiClient.interceptors.request.use(async (config) => {
-  const supabase = createClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  
-  if (session?.access_token) {
-    config.headers.Authorization = `Bearer ${session.access_token}`
+apiClient.interceptors.request.use((config) => {
+  if (currentAccessToken) {
+    config.headers.Authorization = `Bearer ${currentAccessToken}`
   }
-  
   return config
 })
 

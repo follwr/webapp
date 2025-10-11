@@ -12,5 +12,15 @@ export const followsApi = {
     const response = await apiClient.delete(`/follows/${creatorId}`)
     return response.data
   },
+
+  // Check if following a creator
+  isFollowing: async (creatorId: string): Promise<boolean> => {
+    try {
+      const response = await apiClient.get<{ data: { isFollowing: boolean } }>(`/follows/${creatorId}/status`)
+      return response.data.data.isFollowing
+    } catch (error) {
+      return false
+    }
+  },
 }
 
