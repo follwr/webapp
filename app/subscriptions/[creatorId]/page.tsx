@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useAuth } from '@/components/auth/auth-provider'
 import { useRouter, useParams } from 'next/navigation'
 import { ChevronLeft, Send } from 'lucide-react'

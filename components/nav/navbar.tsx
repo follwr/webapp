@@ -7,21 +7,9 @@ import Link from 'next/link'
 import { useAuth } from '@/components/auth/auth-provider'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
-  Home,
-  User,
-  LogOut,
-  PlusCircle,
   Menu,
   X,
-  Users,
   Bell,
-  Radio,
-  Bookmark,
-  ShoppingBag,
-  CreditCard,
-  DollarSign,
-  Settings,
-  HelpCircle,
 } from 'lucide-react'
 
 export function Navbar() {

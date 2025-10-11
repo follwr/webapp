@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const profile = await usersApi.getMyProfile()
       setUserProfile(profile)
-    } catch (error) {
+    } catch {
       // User doesn't have a profile yet
       setUserProfile(null)
     }
@@ -61,7 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const profile = await creatorsApi.getMyProfile()
       setCreatorProfile(profile)
-    } catch (error) {
+    } catch {
       // User is not a creator - this is fine
       setCreatorProfile(null)
     }

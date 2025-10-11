@@ -9,7 +9,6 @@ export default function VisibilityPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
   const [hideAccount, setHideAccount] = useState(false)
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   useEffect(() => {
     if (!loading && !user) {

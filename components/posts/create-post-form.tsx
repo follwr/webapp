@@ -22,7 +22,7 @@ interface CreatePostFormProps {
 }
 
 export function CreatePostForm({ onPostCreated, compact = false }: CreatePostFormProps) {
-  const { user, userProfile, creatorProfile } = useAuth()
+  const { userProfile, creatorProfile } = useAuth()
   const [postContent, setPostContent] = useState('')
   const [isPosting, setIsPosting] = useState(false)
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([])

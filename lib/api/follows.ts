@@ -18,7 +18,7 @@ export const followsApi = {
     try {
       const response = await apiClient.get<{ data: { isFollowing: boolean } }>(`/follows/${creatorId}/status`)
       return response.data.data.isFollowing
-    } catch (error) {
+    } catch {
       return false
     }
   },

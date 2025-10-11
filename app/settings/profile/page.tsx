@@ -108,9 +108,10 @@ export default function ProfileSettingsPage() {
 
       // Navigate back
       router.back()
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to save profile:', err)
-      setError(err?.response?.data?.message || 'Failed to save profile. Please try again.')
+      const errorMessage = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to save profile. Please try again.'
+      setError(errorMessage)
     } finally {
       setIsSaving(false)
     }
