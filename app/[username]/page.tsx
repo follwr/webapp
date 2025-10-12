@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useAuth } from '@/components/auth/auth-provider'
 import { useRouter, useParams } from 'next/navigation'
-import { Heart, LayoutGrid, DollarSign, MessageCircle, UserPlus, Image as ImageIcon } from 'lucide-react'
+import { Heart, LayoutGrid, DollarSign, MessageCircle, UserPlus, Image as ImageIcon, Settings, Play } from 'lucide-react'
 import { creatorsApi } from '@/lib/api/creators'
 import { productsApi } from '@/lib/api/products'
 import { followsApi } from '@/lib/api/follows'
@@ -27,6 +27,16 @@ export default function CreatorProfilePage() {
   const [isFollowing, setIsFollowing] = useState(false)
   const [isHoveringFollow, setIsHoveringFollow] = useState(false)
   const [loadingData, setLoadingData] = useState(true)
+  const hasFetchedRef = useRef<string | null>(null)
+  
+  // Check if viewing own profile
+  const isOwnProfile = user?.id === creator?.userId
+
+  // Check if media is video
+  const isVideo = (url: string) => {
+    const videoExtensions = ['.mp4', '.mov', '.webm', '.avi', '.mkv']
+    return videoExtensions.some(ext => url.toLowerCase().includes(ext))
+  }
 
   useEffect(() => {
     if (!loading && !user) {
@@ -38,15 +48,23 @@ export default function CreatorProfilePage() {
     const fetchCreatorData = async () => {
       if (!username) return
       
+      // Prevent duplicate fetches for the same username
+      if (hasFetchedRef.current === username) return
+      hasFetchedRef.current = username
+      
       try {
         setLoadingData(true)
         const data = await creatorsApi.getByUsername(username)
         setCreator(data)
         
-        // Ensure all posts have the creator field populated
+        // Create a clean creator object for posts (without nested posts to avoid circular reference)
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { posts: _posts, ...creatorWithoutPosts } = data
+        
+        // Ensure all posts have the creator field populated with userProfile
         const postsWithCreator = (data.posts || []).map(post => ({
           ...post,
-          creator: data
+          creator: creatorWithoutPosts
         }))
         setPosts(postsWithCreator)
         
@@ -65,10 +83,10 @@ export default function CreatorProfilePage() {
       }
     }
 
-    if (user) {
+    if (user && !loading) {
       fetchCreatorData()
     }
-  }, [username, user])
+  }, [username, user, loading])
 
   const handleSubscribe = () => {
     console.log('Subscribe clicked')
@@ -130,24 +148,26 @@ export default function CreatorProfilePage() {
           )}
           
           {/* Action Icons */}
-          <div className="absolute top-4 right-4 flex items-center gap-2">
-            <Button
-              onClick={handleTip}
-              size="icon"
-              variant="secondary"
-              className="w-10 h-10 bg-white hover:bg-gray-100 rounded-full shadow-lg"
-            >
-              <DollarSign className="w-5 h-5 text-gray-900" strokeWidth={2} />
-            </Button>
-            <Button
-              onClick={handleMessage}
-              size="icon"
-              variant="secondary"
-              className="w-10 h-10 bg-white hover:bg-gray-100 rounded-full shadow-lg"
-            >
-              <MessageCircle className="w-5 h-5 text-gray-900" strokeWidth={2} />
-            </Button>
-          </div>
+          {!isOwnProfile && (
+            <div className="absolute top-4 right-4 flex items-center gap-2">
+              <Button
+                onClick={handleTip}
+                size="icon"
+                variant="secondary"
+                className="w-10 h-10 bg-white hover:bg-gray-100 rounded-full shadow-lg"
+              >
+                <DollarSign className="w-5 h-5 text-gray-900" strokeWidth={2} />
+              </Button>
+              <Button
+                onClick={handleMessage}
+                size="icon"
+                variant="secondary"
+                className="w-10 h-10 bg-white hover:bg-gray-100 rounded-full shadow-lg"
+              >
+                <MessageCircle className="w-5 h-5 text-gray-900" strokeWidth={2} />
+              </Button>
+            </div>
+          )}
 
           {/* Creator Info Overlay */}
           <div className="absolute bottom-6 left-6 right-6 text-center">
@@ -192,27 +212,41 @@ export default function CreatorProfilePage() {
 
         {/* Action Buttons */}
         <div className="px-6 mb-6 flex gap-3">
-          <PrimaryButton
-            onClick={handleSubscribe}
-            className="flex-1 flex items-center justify-center gap-2"
-          >
-            <UserPlus className="w-5 h-5" strokeWidth={2} />
-            <span>Subscribe</span>
-          </PrimaryButton>
-          
-          <Button
-            onClick={handleFollow}
-            onMouseEnter={() => setIsHoveringFollow(true)}
-            onMouseLeave={() => setIsHoveringFollow(false)}
-            variant={isFollowing ? "secondary" : "outline"}
-            className={`flex-1 rounded-full ${
-              isFollowing && isHoveringFollow
-                ? 'bg-red-500 hover:bg-red-600 text-white'
-                : ''
-            }`}
-          >
-            {isFollowing ? (isHoveringFollow ? 'Unfollow' : 'Following') : 'Follow'}
-          </Button>
+          {isOwnProfile ? (
+            // Own profile - Show Edit Profile button
+            <PrimaryButton
+              onClick={() => router.push('/settings/profile')}
+              className="flex-1 flex items-center justify-center gap-2"
+            >
+              <Settings className="w-5 h-5" strokeWidth={2} />
+              <span>Edit Profile</span>
+            </PrimaryButton>
+          ) : (
+            // Other's profile - Show Subscribe/Follow buttons
+            <>
+              <PrimaryButton
+                onClick={handleSubscribe}
+                className="flex-1 flex items-center justify-center gap-2"
+              >
+                <UserPlus className="w-5 h-5" strokeWidth={2} />
+                <span>Subscribe</span>
+              </PrimaryButton>
+              
+              <Button
+                onClick={handleFollow}
+                onMouseEnter={() => setIsHoveringFollow(true)}
+                onMouseLeave={() => setIsHoveringFollow(false)}
+                variant={isFollowing ? "secondary" : "outline"}
+                className={`flex-1 rounded-full ${
+                  isFollowing && isHoveringFollow
+                    ? 'bg-red-500 hover:bg-red-600 text-white'
+                    : ''
+                }`}
+              >
+                {isFollowing ? (isHoveringFollow ? 'Unfollow' : 'Following') : 'Follow'}
+              </Button>
+            </>
+          )}
         </div>
 
         {/* Tabs */}
@@ -266,24 +300,32 @@ export default function CreatorProfilePage() {
 
         {/* Content Grid or Feed */}
         <div className="px-4">
-          {activeTab === 'posts' && isFollowing ? (
-            // Feed view for followed creators
+          {activeTab === 'posts' && (isFollowing || isOwnProfile) ? (
+            // Feed view for followed creators or own profile
             <div className="max-w-2xl mx-auto">
-              <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-                {posts.map((post) => (
-                  <PostCard key={post.id} post={post} />
-                ))}
-              </div>
-              {posts.length === 0 && (
+              {posts.length > 0 ? (
+                <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+                  {posts.map((post) => (
+                    <PostCard key={post.id} post={post} />
+                  ))}
+                </div>
+              ) : (
                 <div className="text-center py-12">
                   <p className="text-gray-500">No posts yet</p>
                 </div>
               )}
             </div>
           ) : (
-            // Grid view for non-followed creators
-            <div className="grid grid-cols-2 gap-4">
-              {activeTab === 'posts' && posts.map((post) => (
+            // Grid view for non-followed creators (locked preview)
+            <>
+              {activeTab === 'posts' && posts.length === 0 && (
+                <div className="text-center py-12">
+                  <p className="text-gray-500">No posts yet</p>
+                </div>
+              )}
+              
+              <div className="grid grid-cols-2 gap-4">
+                {activeTab === 'posts' && posts.map((post) => (
                 <button
                   key={post.id}
                   onClick={() => router.push(`/saved/${post.id}`)}
@@ -291,11 +333,27 @@ export default function CreatorProfilePage() {
                 >
                   {post.mediaUrls && post.mediaUrls.length > 0 ? (
                     <>
-                      <img
-                        src={post.mediaUrls[0]}
-                        alt={post.content || 'Post'}
-                        className="w-full h-full object-cover"
-                      />
+                      {isVideo(post.mediaUrls[0]) ? (
+                        <video
+                          src={post.mediaUrls[0]}
+                          className="w-full h-full object-cover"
+                          preload="metadata"
+                        />
+                      ) : (
+                        <img
+                          src={post.mediaUrls[0]}
+                          alt={post.content || 'Post'}
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+                      {/* Play icon overlay for videos */}
+                      {isVideo(post.mediaUrls[0]) && (
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <div className="w-16 h-16 bg-black/60 rounded-full flex items-center justify-center">
+                            <Play className="w-8 h-8 text-white fill-white" />
+                          </div>
+                        </div>
+                      )}
                       {/* Overlay on hover */}
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
                     </>
@@ -325,11 +383,27 @@ export default function CreatorProfilePage() {
                   onClick={() => router.push(`/saved/${slide.id}`)}
                   className="relative rounded-3xl overflow-hidden aspect-[3/4] group"
                 >
-                  <img
-                    src={slide.mediaUrls![0]}
-                    alt={slide.content || 'Slide'}
-                    className="w-full h-full object-cover"
-                  />
+                  {isVideo(slide.mediaUrls![0]) ? (
+                    <>
+                      <video
+                        src={slide.mediaUrls![0]}
+                        className="w-full h-full object-cover"
+                        preload="metadata"
+                      />
+                      {/* Play icon overlay for videos */}
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="w-16 h-16 bg-black/60 rounded-full flex items-center justify-center">
+                          <Play className="w-8 h-8 text-white fill-white" />
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <img
+                      src={slide.mediaUrls![0]}
+                      alt={slide.content || 'Slide'}
+                      className="w-full h-full object-cover"
+                    />
+                  )}
                   {/* Overlay on hover */}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
                 </button>
@@ -367,7 +441,8 @@ export default function CreatorProfilePage() {
                   </div>
                 </button>
               ))}
-            </div>
+              </div>
+            </>
           )}
         </div>
       </div>

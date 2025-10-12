@@ -23,7 +23,7 @@ export function BottomNav() {
     { href: '/explore', icon: Search, label: 'Explore' },
     { href: '/create', icon: Plus, label: 'Create', isCreate: true },
     { href: '/messages', icon: Send, label: 'Messages' },
-    { href: '/settings/profile', icon: User, label: 'Profile', isProfile: true },
+    { href: userProfile?.username ? `/${userProfile.username}` : '/settings/profile', icon: User, label: 'Profile', isProfile: true },
   ]
 
   return (
@@ -32,7 +32,7 @@ export function BottomNav() {
         <div className="bg-white rounded-3xl shadow-lg border border-gray-200 px-6 py-3">
           <div className="flex items-center justify-around">
             {navItems.map((item) => {
-              const isActive = pathname === item.href || (item.isProfile && pathname?.startsWith('/settings'))
+              const isActive = pathname === item.href || (item.isProfile && userProfile?.username && pathname === `/${userProfile.username}`)
               const Icon = item.icon
 
               if (item.isProfile) {

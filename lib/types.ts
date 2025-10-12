@@ -46,18 +46,21 @@ export interface Post {
   creatorId: string
   content?: string
   mediaUrls?: string[]
-  isPublic: boolean
-  requiresTier?: string
-  price?: number
+  visibility: 'public' | 'followers' | 'subscribers'
+  price?: number | null
   totalLikes: number
   totalComments: number
   totalViews: number
+  totalTips?: string
   isPinned: boolean
   publishedAt?: string
   createdAt: string
   updatedAt: string
   creator?: CreatorProfile
   isLiked?: boolean
+  hasPurchased?: boolean
+  requiresPurchase?: boolean
+  hasAccess?: boolean
 }
 
 export interface Subscription {

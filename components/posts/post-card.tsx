@@ -1,13 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import Link from 'next/link'
 import { Post } from '@/lib/types'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Heart, MessageCircle, Info, Share2, Bookmark, MoreVertical, CheckCircle2 } from 'lucide-react'
+import { Heart, MessageCircle, Info, Share2, Bookmark, MoreVertical, CheckCircle2, Lock, Volume2, VolumeX } from 'lucide-react'
 import { postsApi } from '@/lib/api/posts'
 import { formatDistanceToNow } from 'date-fns'
 import { getCreatorDisplayName, getCreatorUsername, getCreatorProfilePicture } from '@/lib/utils/profile'
+import { Button } from '@/components/ui/button'
 
 interface PostCardProps {
   post: Post
@@ -17,6 +18,9 @@ export function PostCard({ post }: PostCardProps) {
   const [isLiked, setIsLiked] = useState(post.isLiked || false)
   const [likeCount, setLikeCount] = useState(post.totalLikes)
   const [isSaved, setIsSaved] = useState(false)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [isMuted, setIsMuted] = useState(true)
+  const videoRef = useRef<HTMLVideoElement | null>(null)
 
   const handleLike = async () => {
     try {
@@ -37,9 +41,42 @@ export function PostCard({ post }: PostCardProps) {
     // TODO: Implement save API call
   }
 
+  const handleVideoClick = (e: React.MouseEvent<HTMLVideoElement>) => {
+    e.preventDefault()
+    const video = e.currentTarget
+    if (video.paused) {
+      video.play()
+      setIsPlaying(true)
+    } else {
+      video.pause()
+      setIsPlaying(false)
+    }
+  }
+
+  const toggleMute = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    const video = videoRef.current
+    if (video) {
+      video.muted = !video.muted
+      setIsMuted(video.muted)
+    }
+  }
+
   const creatorDisplayName = getCreatorDisplayName(post.creator)
   const creatorUsername = getCreatorUsername(post.creator)
   const creatorProfilePicture = getCreatorProfilePicture(post.creator)
+  
+  // Safety check - if no creator, return null
+  if (!post.creator) {
+    console.error('PostCard: post.creator is undefined for post', post.id)
+    return null
+  }
+
+  // Check if media is video
+  const isVideo = (url: string) => {
+    const videoExtensions = ['.mp4', '.mov', '.webm', '.avi', '.mkv']
+    return videoExtensions.some(ext => url.toLowerCase().includes(ext))
+  }
 
   return (
     <div className="bg-white border-b border-gray-100">
@@ -80,17 +117,61 @@ export function PostCard({ post }: PostCardProps) {
         </div>
       </div>
 
-      {/* Media */}
-      {post.mediaUrls && post.mediaUrls.length > 0 && (
-        <div className="w-full">
-          <img
-            src={post.mediaUrls[0]}
-            alt="Post media"
-            className="w-full object-cover"
-            style={{ maxHeight: '600px' }}
-          />
+      {/* Media or Locked Content */}
+      {post.requiresPurchase ? (
+        // Paid content that hasn't been purchased
+        <div className="w-full bg-gradient-to-br from-gray-100 to-gray-200 flex flex-col items-center justify-center" style={{ minHeight: '400px' }}>
+          <div className="text-center p-8">
+            <div className="w-20 h-20 mx-auto mb-4 bg-gray-300 rounded-full flex items-center justify-center">
+              <Lock className="w-10 h-10 text-gray-600" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Exclusive Content</h3>
+            <p className="text-gray-600 mb-6">
+              Unlock this post to view exclusive content
+            </p>
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-8">
+              Unlock for ${post.price}
+            </Button>
+          </div>
         </div>
-      )}
+      ) : post.mediaUrls && post.mediaUrls.length > 0 ? (
+        // Regular content
+        <div className="w-full relative">
+          {isVideo(post.mediaUrls[0]) ? (
+            <>
+              <video
+                ref={videoRef}
+                src={post.mediaUrls[0]}
+                className="w-full object-cover cursor-pointer"
+                style={{ maxHeight: '600px' }}
+                playsInline
+                loop
+                muted={isMuted}
+                preload="metadata"
+                onClick={handleVideoClick}
+              />
+              {/* Mute/Unmute button */}
+              <button
+                onClick={toggleMute}
+                className="absolute bottom-4 right-4 w-10 h-10 bg-black/60 hover:bg-black/80 rounded-full flex items-center justify-center transition-colors z-10"
+              >
+                {isMuted ? (
+                  <VolumeX className="w-5 h-5 text-white" />
+                ) : (
+                  <Volume2 className="w-5 h-5 text-white" />
+                )}
+              </button>
+            </>
+          ) : (
+            <img
+              src={post.mediaUrls[0]}
+              alt="Post media"
+              className="w-full object-cover"
+              style={{ maxHeight: '600px' }}
+            />
+          )}
+        </div>
+      ) : null}
 
       {/* Actions */}
       <div className="flex items-center justify-between px-4 py-3">

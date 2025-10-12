@@ -73,7 +73,7 @@ export function Navbar() {
                 <>
                   {/* User Info */}
                   <Link 
-                    href="/settings/profile" 
+                    href={userProfile?.username ? `/${userProfile.username}` : '/settings/profile'}
                     onClick={toggleMenu}
                     className="flex items-center gap-4 mb-6"
                   >

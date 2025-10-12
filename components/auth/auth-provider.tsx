@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState, useRef } from 'react'
 import { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -33,9 +33,6 @@ const AuthContext = createContext<AuthContextType>({
   refreshUserProfile: async () => {},
 })
 
-// Module-level variable to prevent double initialization
-let sharedInitRef: React.MutableRefObject<boolean> | null = null
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
@@ -44,6 +41,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const router = useRouter()
   const supabase = useState(() => createClient())[0] // Create only once
+  const lastUserIdRef = useRef<string | null>(null)
+  const fetchingProfilesRef = useRef(false)
 
   // Fetch user profile
   const fetchUserProfile = async () => {
@@ -69,6 +68,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  // Fetch both profiles with deduplication
+  const fetchProfiles = async (userId: string) => {
+    // Prevent duplicate fetches
+    if (fetchingProfilesRef.current || lastUserIdRef.current === userId) {
+      return
+    }
+    
+    fetchingProfilesRef.current = true
+    lastUserIdRef.current = userId
+    
+    try {
+      await Promise.all([fetchUserProfile(), fetchCreatorProfile()])
+    } finally {
+      fetchingProfilesRef.current = false
+    }
+  }
+
   const refreshCreatorProfile = async () => {
     await fetchCreatorProfile()
   }
@@ -78,17 +94,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
-    // Prevent double initialization in React 18 Strict Mode (dev)
-    if (!sharedInitRef) {
-      sharedInitRef = { current: false }
-    }
-    if (sharedInitRef.current) {
-      return
-    }
-    sharedInitRef.current = true
-
-    const lastUserIdRef = { current: null as string | null }
-
     // Get initial session
     const initializeAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession()
@@ -99,13 +104,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setApiToken(token) // Update API client token
       setLoading(false)
 
-      // Fetch profiles if user changed
-      const nextUserId = nextUser?.id ?? null
-      if (nextUserId && lastUserIdRef.current !== nextUserId) {
-        lastUserIdRef.current = nextUserId
-        // Fetch both user profile and creator profile (non-blocking)
-        fetchUserProfile()
-        fetchCreatorProfile()
+      // Fetch profiles if user exists
+      if (nextUser?.id) {
+        fetchProfiles(nextUser.id)
       }
     }
 
@@ -120,15 +121,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setApiToken(token) // Update API client token
       setLoading(false)
 
-      // Fetch profiles if user changed
-      const nextUserId = nextUser?.id ?? null
-      if (nextUserId && lastUserIdRef.current !== nextUserId) {
-        lastUserIdRef.current = nextUserId
-        fetchUserProfile()
-        fetchCreatorProfile()
-      } else if (!nextUserId) {
+      // Fetch profiles if user exists, clear if logged out
+      if (nextUser?.id) {
+        fetchProfiles(nextUser.id)
+      } else {
         setUserProfile(null)
         setCreatorProfile(null)
+        lastUserIdRef.current = null
+        fetchingProfilesRef.current = false
       }
     })
 
@@ -142,6 +142,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setCreatorProfile(null)
     setAccessToken(null)
     setApiToken(null) // Clear API client token
+    lastUserIdRef.current = null
+    fetchingProfilesRef.current = false
     router.push('/auth/login')
   }
 
