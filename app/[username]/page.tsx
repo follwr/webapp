@@ -7,6 +7,7 @@ import { Heart, LayoutGrid, DollarSign, MessageCircle, UserPlus, Image as ImageI
 import { creatorsApi } from '@/lib/api/creators'
 import { productsApi } from '@/lib/api/products'
 import { followsApi } from '@/lib/api/follows'
+import { subscriptionsApi } from '@/lib/api/subscriptions'
 import { CreatorProfile, Post } from '@/lib/types'
 import { Product } from '@/lib/api/products'
 import { PostCard } from '@/components/posts/post-card'
@@ -27,6 +28,7 @@ export default function CreatorProfilePage() {
   const [isFollowing, setIsFollowing] = useState(false)
   const [isHoveringFollow, setIsHoveringFollow] = useState(false)
   const [loadingData, setLoadingData] = useState(true)
+  const [subscribing, setSubscribing] = useState(false)
   const hasFetchedRef = useRef<string | null>(null)
   
   // Check if viewing own profile
@@ -88,12 +90,23 @@ export default function CreatorProfilePage() {
     }
   }, [username, user, loading])
 
-  const handleSubscribe = () => {
-    if (!creator?.subscriptionPrice || creator.subscriptionPrice === 0) {
+  const handleSubscribe = async () => {
+    if (!creator) return
+    
+    if (!creator.subscriptionPrice || creator.subscriptionPrice === 0) {
       alert('This creator hasn\'t set up subscriptions yet')
       return
     }
-    router.push(`/subscriptions/${getCreatorUsername(creator)}/checkout`)
+
+    try {
+      setSubscribing(true)
+      const { checkoutUrl } = await subscriptionsApi.createCheckoutSession(creator.id)
+      window.location.href = checkoutUrl
+    } catch (error) {
+      console.error('Failed to create checkout session:', error)
+      alert('Failed to start subscription. Please try again.')
+      setSubscribing(false)
+    }
   }
 
   const handleFollow = async () => {
@@ -229,10 +242,18 @@ export default function CreatorProfilePage() {
             <>
               <PrimaryButton
                 onClick={handleSubscribe}
+                disabled={subscribing}
+                isLoading={subscribing}
                 className="flex-1 flex items-center justify-center gap-2"
               >
-                <UserPlus className="w-5 h-5" strokeWidth={2} />
-                <span>Subscribe</span>
+                {subscribing ? (
+                  <span>Loading...</span>
+                ) : (
+                  <>
+                    <UserPlus className="w-5 h-5" strokeWidth={2} />
+                    <span>Subscribe</span>
+                  </>
+                )}
               </PrimaryButton>
               
               <Button
