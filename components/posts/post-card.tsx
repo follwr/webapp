@@ -46,7 +46,7 @@ export function PostCard({ post }: PostCardProps) {
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3">
         <Link 
-          href={`/creators/${creatorUsername}`}
+          href={`/${creatorUsername}`}
           className="flex items-center gap-3"
         >
           <Avatar className="h-10 w-10">
@@ -136,7 +136,7 @@ export function PostCard({ post }: PostCardProps) {
         <div className="px-4 pb-3">
           <p className="text-sm text-gray-900">
             <Link 
-              href={`/creators/${creatorUsername}`}
+              href={`/${creatorUsername}`}
               className="font-semibold hover:underline"
             >
               {creatorDisplayName}

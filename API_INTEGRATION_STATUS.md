@@ -24,7 +24,7 @@ Backend URL: `https://backend-production-1eee.up.railway.app/`
 - [x] `/app/feed/page.tsx` - Fetches posts feed from API
 - [x] `/app/profile/page.tsx` - Fetches creator profile and subscriptions
 - [x] `/app/explore/page.tsx` - Lists all creators with search
-- [x] `/app/creators/[username]/page.tsx` - Creator profile with posts and products
+- [x] `/app/[username]/page.tsx` - Creator profile with posts and products
 
 ### Configuration
 - [x] Environment template updated with backend URL

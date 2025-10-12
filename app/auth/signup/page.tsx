@@ -65,7 +65,10 @@ export default function SignupPage() {
 
       if (error) throw error
 
-      // Redirect to feed or show success message
+      // Wait a moment for auth state to initialize before redirecting
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
+      // Redirect to feed
       router.push('/feed')
       router.refresh()
     } catch (err) {

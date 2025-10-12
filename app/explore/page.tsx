@@ -221,7 +221,7 @@ export default function ExplorePage() {
               {creators.map((creator) => (
                   <button
                     key={creator.id}
-                    onClick={() => router.push(`/creators/${getCreatorUsername(creator)}`)}
+                    onClick={() => router.push(`/${getCreatorUsername(creator)}`)}
                     className="w-full flex items-center justify-between py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors"
                   >
                     <div className="flex items-center gap-3">

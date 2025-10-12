@@ -157,7 +157,7 @@ export default function FeedPage() {
                     creators.slice(0, 6).map((creator) => (
                       <Link
                         key={creator.id}
-                        href={`/creators/${getCreatorUsername(creator)}`}
+                        href={`/${getCreatorUsername(creator)}`}
                         className="flex-shrink-0 w-32"
                       >
                         <div className="w-32 h-32 rounded-2xl overflow-hidden mb-2 bg-gray-100">
@@ -287,7 +287,7 @@ export default function FeedPage() {
           creators.slice(0, 6).map((creator) => (
             <Link
               key={creator.id}
-              href={`/creators/${getCreatorUsername(creator)}`}
+              href={`/${getCreatorUsername(creator)}`}
               className="flex-shrink-0 w-32"
             >
               <div className="w-32 h-32 rounded-2xl overflow-hidden mb-2 bg-gray-100">

@@ -4,11 +4,8 @@ import { CreatorProfile, Post } from '../types'
 export const creatorsApi = {
   // Create creator profile
   createProfile: async (data: {
-    displayName: string
-    username: string
-    bio?: string
-    profilePictureUrl?: string
     coverImageUrl?: string
+    subscriptionPrice?: number
   }) => {
     const response = await apiClient.post<{ data: CreatorProfile }>('/creators/profile', data)
     return response.data.data

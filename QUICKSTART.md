@@ -143,7 +143,7 @@ follwr-frontend/
 ### Medium Priority
 
 5. **Individual Creator Page**
-   - `/creators/[username]` page
+   - `/[username]` page
    - Creator posts grid
    - Subscribe button with tiers
 

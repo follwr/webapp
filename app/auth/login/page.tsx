@@ -31,6 +31,9 @@ export default function LoginPage() {
 
       if (error) throw error
 
+      // Wait a moment for auth state to initialize before redirecting
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
       router.push('/feed')
       router.refresh()
     } catch (err) {

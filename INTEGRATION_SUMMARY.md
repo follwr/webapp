@@ -44,7 +44,7 @@ Created 11 comprehensive API service files with full TypeScript types:
    - Client-side search functionality
    - Shows creator profiles with avatars and verification badges
 
-4. **Creator Profile Page** (`/app/creators/[username]/page.tsx`)
+4. **Creator Profile Page** (`/app/[username]/page.tsx`)
    - Fetches creator by username from `/creators/:username`
    - Shows creator posts and products
    - Follow/unfollow functionality
