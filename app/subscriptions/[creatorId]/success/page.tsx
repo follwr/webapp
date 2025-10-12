@@ -2,12 +2,15 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
+import { useAuth } from '@/components/auth/auth-provider'
 import Link from 'next/link'
 import { CheckCircle, Sparkles } from 'lucide-react'
+import { subscriptionsApi } from '@/lib/api/subscriptions'
 import { PrimaryButton } from '@/components/ui/primary-button'
 import { Button } from '@/components/ui/button'
 
 export default function SubscriptionSuccessPage() {
+  const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const params = useParams()
   const searchParams = useSearchParams()
@@ -15,26 +18,51 @@ export default function SubscriptionSuccessPage() {
   const sessionId = searchParams.get('session_id')
 
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Verify the session was successful
-    if (!sessionId) {
-      router.push(`/${username}`)
-      return
+    const verifySubscription = async () => {
+      if (!sessionId) {
+        router.push(`/${username}`)
+        return
+      }
+
+      // Wait for auth to be ready
+      if (authLoading) {
+        return
+      }
+
+      // If user isn't logged in, skip verification but show success
+      // (webhook will still process the subscription)
+      if (!user) {
+        setLoading(false)
+        setError('Your subscription is being processed. Please refresh in a moment.')
+        return
+      }
+
+      try {
+        // Verify the checkout session and create subscription
+        // This is a backup in case webhook hasn't fired yet
+        await subscriptionsApi.verifyCheckoutSession(sessionId)
+      } catch (err) {
+        // Show info message but don't fail - webhook will still process it
+        setError('Your subscription is being processed. Refresh the page in a moment to see your new status.')
+      } finally {
+        setLoading(false)
+      }
     }
 
-    // Give Stripe webhook time to process
-    setTimeout(() => {
-      setLoading(false)
-    }, 2000)
-  }, [sessionId, username, router])
+    verifySubscription()
+  }, [sessionId, username, router, user, authLoading])
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Confirming your subscription...</p>
+          <p className="text-gray-600">
+            {authLoading ? 'Loading...' : 'Confirming your subscription...'}
+          </p>
         </div>
       </div>
     )
@@ -65,9 +93,16 @@ export default function SubscriptionSuccessPage() {
           You now have access to all subscriber-only content and can message directly!
         </p>
 
+        {/* Error Message */}
+        {error && (
+          <div className="mb-4 bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg text-sm">
+            {error}
+          </div>
+        )}
+
         {/* Action Buttons */}
         <div className="space-y-3">
-          <Link href={`/${username}`}>
+          <Link href={`/${username}?subscribed=true`}>
             <PrimaryButton className="w-full">
               View Profile
             </PrimaryButton>
@@ -78,6 +113,16 @@ export default function SubscriptionSuccessPage() {
               Go to Feed
             </Button>
           </Link>
+
+          {error && (
+            <Button 
+              variant="ghost" 
+              onClick={() => window.location.reload()}
+              className="w-full text-sm text-gray-500"
+            >
+              Refresh Page
+            </Button>
+          )}
         </div>
       </div>
     </div>

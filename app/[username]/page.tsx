@@ -36,6 +36,28 @@ export default function CreatorProfilePage() {
   // Check if viewing own profile
   const isOwnProfile = user?.id === creator?.userId
 
+  // Function to refresh creator data (e.g., after subscription)
+  const refreshCreatorData = async () => {
+    if (!username) return
+    
+    try {
+      const data = await creatorsApi.getByUsername(username)
+      setCreator(data)
+      setIsFollowing(data.isFollowing || false)
+      setIsSubscribed(data.isSubscribed || false)
+      
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { posts: _posts, ...creatorWithoutPosts } = data
+      const postsWithCreator = (data.posts || []).map(post => ({
+        ...post,
+        creator: creatorWithoutPosts
+      }))
+      setPosts(postsWithCreator)
+    } catch (error) {
+      console.error('Failed to refresh creator data:', error)
+    }
+  }
+
   // Check if media is video
   const isVideo = (url: string) => {
     const videoExtensions = ['.mp4', '.mov', '.webm', '.avi', '.mkv']
@@ -47,6 +69,24 @@ export default function CreatorProfilePage() {
       router.push('/auth/login')
     }
   }, [user, loading, router])
+
+  // Check if we're coming from a subscription success and refresh data
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !loading && user) {
+      const urlParams = new URLSearchParams(window.location.search)
+      if (urlParams.get('subscribed') === 'true') {
+        // Clear the URL parameter
+        const newUrl = window.location.pathname
+        window.history.replaceState({}, '', newUrl)
+        
+        // Reset fetch guard and refresh
+        hasFetchedRef.current = null
+        setTimeout(() => {
+          refreshCreatorData()
+        }, 1000)
+      }
+    }
+  }, [loading, user])
 
   useEffect(() => {
     const fetchCreatorData = async () => {

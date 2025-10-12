@@ -34,8 +34,14 @@ apiClient.interceptors.response.use(
   async (error) => {
     if (error.response?.status === 401) {
       // Token expired or invalid - redirect to login
+      // BUT: Don't redirect if we're on the success page (auth might be initializing)
       if (typeof window !== 'undefined') {
-        window.location.href = '/auth/login'
+        const currentPath = window.location.pathname
+        const isSuccessPage = currentPath.includes('/success')
+        
+        if (!isSuccessPage) {
+          window.location.href = '/auth/login'
+        }
       }
     }
     return Promise.reject(error)

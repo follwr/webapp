@@ -10,6 +10,15 @@ export const subscriptionsApi = {
     return response.data.data
   },
 
+  // Verify checkout session and create subscription (backup to webhooks)
+  verifyCheckoutSession: async (sessionId: string) => {
+    const response = await apiClient.post<{ data: { subscription: Subscription; message: string } }>(
+      '/subscriptions/verify-session',
+      { sessionId }
+    )
+    return response.data.data
+  },
+
   // Subscribe to a creator (old method with payment method)
   subscribe: async (creatorId: string, paymentMethodId: string) => {
     const response = await apiClient.post<{ data: { subscription: Subscription; clientSecret?: string } }>(

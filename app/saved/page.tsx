@@ -29,6 +29,7 @@ export default function SavedPostsPage() {
         setSavedPosts(posts)
       } catch (error) {
         console.error('Failed to load saved posts:', error)
+        setSavedPosts([]) // Set empty array on error
       } finally {
         setLoadingPosts(false)
       }
@@ -83,12 +84,17 @@ export default function SavedPostsPage() {
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-4">
-            {savedPosts.map((post) => (
-              <button
-                key={post.id}
-                onClick={() => router.push(`/saved/${post.id}`)}
-                className="relative rounded-3xl overflow-hidden aspect-[3/4] group"
-              >
+            {savedPosts.map((post) => {
+              if (!post || !post.id) {
+                return null
+              }
+              
+              return (
+                <button
+                  key={post.id}
+                  onClick={() => router.push(`/saved/${post.id}`)}
+                  className="relative rounded-3xl overflow-hidden aspect-[3/4] group"
+                >
                 {post.mediaUrls && post.mediaUrls.length > 0 ? (
                   <>
                     {isVideo(post.mediaUrls[0]) ? (
@@ -133,7 +139,8 @@ export default function SavedPostsPage() {
                   </div>
                 )}
               </button>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>
