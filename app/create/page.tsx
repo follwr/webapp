@@ -7,6 +7,8 @@ import { CreateHeader } from '@/components/nav/create-header'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Eye, Image as ImageIcon, Video as VideoIcon, DollarSign, Radio, X } from 'lucide-react'
 import { PrimaryButton } from '@/components/ui/primary-button'
+import { postsApi } from '@/lib/api/posts'
+import { uploadApi } from '@/lib/api/upload'
 
 interface MediaFile {
   id: string
@@ -16,7 +18,7 @@ interface MediaFile {
 }
 
 export default function CreatePage() {
-  const { user, loading } = useAuth()
+  const { user, userProfile, creatorProfile, isCreator, loading } = useAuth()
   const router = useRouter()
   const [postContent, setPostContent] = useState('')
   const [isPosting, setIsPosting] = useState(false)
@@ -25,6 +27,7 @@ export default function CreatePage() {
   const [isPriceModalOpen, setIsPriceModalOpen] = useState(false)
   const [visibility, setVisibility] = useState<'all' | 'subscribers'>('all')
   const [price, setPrice] = useState('')
+  const [checkingCreator, setCheckingCreator] = useState(true)
   const imageInputRef = useRef<HTMLInputElement>(null)
   const videoInputRef = useRef<HTMLInputElement>(null)
 
@@ -33,6 +36,24 @@ export default function CreatePage() {
       router.push('/auth/login')
     }
   }, [user, loading, router])
+
+  // Separate effect to check creator status after auth is loaded
+  useEffect(() => {
+    if (!loading && user) {
+      // Give it a moment to load creator profile
+      const timer = setTimeout(() => {
+        console.log('Creator check:', {
+          isCreator,
+          creatorProfile,
+          userProfile,
+          user: user?.email
+        })
+        setCheckingCreator(false)
+      }, 1000)
+      
+      return () => clearTimeout(timer)
+    }
+  }, [loading, user, isCreator, creatorProfile, userProfile])
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
@@ -81,15 +102,63 @@ export default function CreatePage() {
   }
 
   const handlePost = async () => {
+    // Check if user is a creator
+    if (!isCreator) {
+      alert('You need to become a creator to post content. Redirecting to creator signup...')
+      router.push('/creator-signup')
+      return
+    }
+
+    // Validate that there's content or media
+    if (!postContent.trim() && mediaFiles.length === 0) {
+      alert('Please add some content or media to your post')
+      return
+    }
+
     setIsPosting(true)
-    // TODO: Implement post creation
-    setTimeout(() => {
-      setIsPosting(false)
+    try {
+      // Upload media files if any
+      let mediaUrls: string[] = []
+      if (mediaFiles.length > 0) {
+        console.log('Uploading media files...')
+        
+        // Upload all media files in parallel
+        const uploadPromises = mediaFiles.map(media => 
+          uploadApi.uploadFileComplete(media.file)
+        )
+        mediaUrls = await Promise.all(uploadPromises)
+        
+        console.log('Media uploaded successfully:', mediaUrls)
+      }
+
+      // Map visibility to backend format
+      const visibilityMap = {
+        'all': 'public' as const,
+        'subscribers': 'subscribers' as const,
+      }
+
+      // Create the post
+      console.log('Creating post...')
+      await postsApi.createPost({
+        content: postContent.trim() || undefined,
+        mediaUrls: mediaUrls.length > 0 ? mediaUrls : undefined,
+        visibility: visibilityMap[visibility],
+        price: price ? parseFloat(price) : undefined,
+      })
+
+      console.log('Post created successfully!')
+      
+      // Redirect to feed
       router.push('/feed')
-    }, 1000)
+    } catch (error) {
+      console.error('Error creating post:', error)
+      alert('Failed to create post. Please try again.')
+    } finally {
+      setIsPosting(false)
+    }
   }
 
-  if (loading) {
+  if (loading || checkingCreator) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -99,23 +168,29 @@ export default function CreatePage() {
 
   return (
     <>
-      <CreateHeader onPost={handlePost} isLoading={isPosting} />
+      <CreateHeader 
+        onPost={handlePost} 
+        isLoading={isPosting}
+        displayName={userProfile?.displayName || user?.user_metadata?.full_name}
+        username={userProfile?.username || user?.email?.split('@')[0]}
+        profilePictureUrl={userProfile?.profilePictureUrl || user?.user_metadata?.avatar_url}
+      />
       
       <div className="pt-20 pb-6 px-4">
         {/* User Info */}
         <div className="flex items-start gap-3 mb-6">
           <Avatar className="h-12 w-12">
-            <AvatarImage src={user?.user_metadata?.avatar_url} />
+            <AvatarImage src={userProfile?.profilePictureUrl || user?.user_metadata?.avatar_url} />
             <AvatarFallback className="bg-gray-200 text-gray-700">
-              {user?.email?.charAt(0).toUpperCase()}
+              {userProfile?.displayName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1">
             <h3 className="font-semibold text-gray-900">
-              {user?.user_metadata?.full_name || 'User Name'}
+              {userProfile?.displayName || user?.user_metadata?.full_name || 'User Name'}
             </h3>
             <p className="text-sm text-gray-500">
-              @{user?.email?.split('@')[0] || 'username'}
+              @{userProfile?.username || user?.email?.split('@')[0] || 'username'}
             </p>
           </div>
           

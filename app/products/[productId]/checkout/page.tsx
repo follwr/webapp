@@ -5,6 +5,7 @@ import { useAuth } from '@/components/auth/auth-provider'
 import { useRouter, useParams } from 'next/navigation'
 import { ChevronLeft, X } from 'lucide-react'
 import { PrimaryButton } from '@/components/ui/primary-button'
+import { Button } from '@/components/ui/button'
 
 // Mock product data
 const mockProduct = {
@@ -62,12 +63,14 @@ export default function PurchaseConfirmationPage() {
     <div className="flex flex-col min-h-screen bg-white">
       {/* Header */}
       <div className="flex items-center justify-center px-4 py-4 border-b border-gray-200 relative">
-        <button
+        <Button
           onClick={() => router.back()}
-          className="absolute left-4 p-2 hover:bg-gray-100 rounded-full transition-colors"
+          variant="ghost"
+          size="icon"
+          className="absolute left-4 p-2 rounded-full"
         >
           <ChevronLeft className="w-6 h-6 text-gray-700" />
-        </button>
+        </Button>
         
         <h1 className="text-xl font-semibold text-gray-900">
           Purchase confirmation
@@ -111,12 +114,14 @@ export default function PurchaseConfirmationPage() {
                   <span className="text-xl font-semibold text-gray-900">
                     ${item.price.toFixed(2)}
                   </span>
-                  <button
+                  <Button
                     onClick={() => removeItem(item.id)}
-                    className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+                    variant="ghost"
+                    size="icon"
+                    className="p-1 rounded-lg h-auto w-auto"
                   >
                     <X className="w-5 h-5 text-blue-500" strokeWidth={2} />
-                  </button>
+                  </Button>
                 </div>
               </div>
             ))}

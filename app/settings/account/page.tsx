@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '@/components/auth/auth-provider'
 import { useRouter } from 'next/navigation'
 import { ChevronLeft, ChevronRight, Shield } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 export default function AccountSettingsPage() {
   const { user, loading } = useAuth()
@@ -34,12 +36,14 @@ export default function AccountSettingsPage() {
     <div className="flex flex-col min-h-screen bg-white">
       {/* Header */}
       <div className="flex items-center justify-center px-4 py-4 border-b border-gray-200 relative">
-        <button
+        <Button
           onClick={() => router.back()}
-          className="absolute left-4 p-2 hover:bg-gray-100 rounded-full transition-colors"
+          variant="ghost"
+          size="icon"
+          className="absolute left-4 p-2 rounded-full"
         >
           <ChevronLeft className="w-6 h-6 text-gray-700" />
-        </button>
+        </Button>
         
         <h1 className="text-xl font-semibold text-gray-900">
           Account Settings
@@ -60,12 +64,12 @@ export default function AccountSettingsPage() {
               <label className="block text-xs text-gray-500 mb-1.5">
                 Email
               </label>
-              <input
+              <Input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="brontesheppeard@gmail.com"
-                className="w-full text-base text-gray-900 placeholder-gray-400 border-none outline-none bg-transparent"
+                className="w-full text-base text-gray-900 placeholder-gray-400 border-none outline-none bg-transparent p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
               />
             </div>
 
@@ -74,12 +78,12 @@ export default function AccountSettingsPage() {
               <label className="block text-xs text-gray-500 mb-1.5">
                 Phone number
               </label>
-              <input
+              <Input
                 type="tel"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
                 placeholder="0406068552"
-                className="w-full text-base text-gray-900 placeholder-gray-400 border-none outline-none bg-transparent"
+                className="w-full text-base text-gray-900 placeholder-gray-400 border-none outline-none bg-transparent p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
               />
             </div>
           </div>
@@ -93,9 +97,10 @@ export default function AccountSettingsPage() {
 
           <div className="space-y-0">
             {/* Change Password */}
-            <button
+            <Button
               onClick={() => router.push('/settings/account/change-password')}
-              className="w-full flex items-center gap-4 py-5 border-b border-gray-100 hover:bg-gray-50 transition-colors"
+              variant="ghost"
+              className="w-full flex items-center gap-4 py-5 border-b border-gray-100 hover:bg-gray-50 h-auto justify-start rounded-none"
             >
               <Shield className="w-12 h-12 text-gray-700" strokeWidth={1.5} />
               <div className="flex-1 text-left">
@@ -104,7 +109,7 @@ export default function AccountSettingsPage() {
                 </h3>
               </div>
               <ChevronRight className="w-6 h-6 text-blue-500 flex-shrink-0" strokeWidth={2} />
-            </button>
+            </Button>
           </div>
         </div>
       </div>

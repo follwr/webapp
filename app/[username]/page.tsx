@@ -11,6 +11,8 @@ import { CreatorProfile, Post } from '@/lib/types'
 import { Product } from '@/lib/api/products'
 import { PostCard } from '@/components/posts/post-card'
 import { getCreatorDisplayName, getCreatorUsername, getCreatorBio } from '@/lib/utils/profile'
+import { PrimaryButton } from '@/components/ui/primary-button'
+import { Button } from '@/components/ui/button'
 
 export default function CreatorProfilePage() {
   const { user, loading } = useAuth()
@@ -129,18 +131,22 @@ export default function CreatorProfilePage() {
           
           {/* Action Icons */}
           <div className="absolute top-4 right-4 flex items-center gap-2">
-            <button
+            <Button
               onClick={handleTip}
-              className="w-10 h-10 bg-white hover:bg-gray-100 rounded-full flex items-center justify-center shadow-lg transition-colors"
+              size="icon"
+              variant="secondary"
+              className="w-10 h-10 bg-white hover:bg-gray-100 rounded-full shadow-lg"
             >
               <DollarSign className="w-5 h-5 text-gray-900" strokeWidth={2} />
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleMessage}
-              className="w-10 h-10 bg-white hover:bg-gray-100 rounded-full flex items-center justify-center shadow-lg transition-colors"
+              size="icon"
+              variant="secondary"
+              className="w-10 h-10 bg-white hover:bg-gray-100 rounded-full shadow-lg"
             >
               <MessageCircle className="w-5 h-5 text-gray-900" strokeWidth={2} />
-            </button>
+            </Button>
           </div>
 
           {/* Creator Info Overlay */}
@@ -186,48 +192,51 @@ export default function CreatorProfilePage() {
 
         {/* Action Buttons */}
         <div className="px-6 mb-6 flex gap-3">
-          <button
+          <PrimaryButton
             onClick={handleSubscribe}
-            className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-full transition-colors"
+            className="flex-1 flex items-center justify-center gap-2"
           >
             <UserPlus className="w-5 h-5" strokeWidth={2} />
             <span>Subscribe</span>
-          </button>
+          </PrimaryButton>
           
-          <button
+          <Button
             onClick={handleFollow}
             onMouseEnter={() => setIsHoveringFollow(true)}
             onMouseLeave={() => setIsHoveringFollow(false)}
-            className={`flex-1 px-6 py-3.5 font-semibold rounded-full transition-colors ${
-              isFollowing
-                ? 'bg-gray-200 hover:bg-red-500 hover:text-white text-gray-900'
-                : 'bg-white hover:bg-gray-50 border-2 border-gray-300 text-gray-900'
+            variant={isFollowing ? "secondary" : "outline"}
+            className={`flex-1 rounded-full ${
+              isFollowing && isHoveringFollow
+                ? 'bg-red-500 hover:bg-red-600 text-white'
+                : ''
             }`}
           >
             {isFollowing ? (isHoveringFollow ? 'Unfollow' : 'Following') : 'Follow'}
-          </button>
+          </Button>
         </div>
 
         {/* Tabs */}
         <div className="px-6 mb-6 flex gap-3">
-          <button
+          <Button
             onClick={() => setActiveTab('posts')}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-medium transition-colors ${
+            variant={activeTab === 'posts' ? 'default' : 'secondary'}
+            className={`flex items-center gap-2 rounded-full ${
               activeTab === 'posts'
-                ? 'bg-gray-900 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? 'bg-gray-900 text-white hover:bg-gray-800'
+                : ''
             }`}
           >
             <LayoutGrid className="w-4 h-4" strokeWidth={2} />
             <span>Posts</span>
-          </button>
+          </Button>
           
-          <button
+          <Button
             onClick={() => setActiveTab('slides')}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-medium transition-colors ${
+            variant={activeTab === 'slides' ? 'default' : 'secondary'}
+            className={`flex items-center gap-2 rounded-full ${
               activeTab === 'slides'
-                ? 'bg-gray-900 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? 'bg-gray-900 text-white hover:bg-gray-800'
+                : ''
             }`}
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -235,14 +244,15 @@ export default function CreatorProfilePage() {
               <polyline points="17 2 12 7 7 2" />
             </svg>
             <span>Slides</span>
-          </button>
+          </Button>
           
-          <button
+          <Button
             onClick={() => setActiveTab('products')}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-medium transition-colors ${
+            variant={activeTab === 'products' ? 'default' : 'secondary'}
+            className={`flex items-center gap-2 rounded-full ${
               activeTab === 'products'
-                ? 'bg-gray-900 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? 'bg-gray-900 text-white hover:bg-gray-800'
+                : ''
             }`}
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -251,7 +261,7 @@ export default function CreatorProfilePage() {
               <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
             </svg>
             <span>Products</span>
-          </button>
+          </Button>
         </div>
 
         {/* Content Grid or Feed */}

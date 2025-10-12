@@ -13,7 +13,7 @@ export const creatorsApi = {
 
   // Get my creator profile
   getMyProfile: async () => {
-    const response = await apiClient.get<{ data: CreatorProfile }>('/creators/profile')
+    const response = await apiClient.get<{ data: CreatorProfile | null }>('/creators/profile')
     return response.data.data
   },
 

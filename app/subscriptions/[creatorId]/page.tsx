@@ -4,6 +4,8 @@ import { useEffect } from 'react'
 import { useAuth } from '@/components/auth/auth-provider'
 import { useRouter, useParams } from 'next/navigation'
 import { ChevronLeft, Send } from 'lucide-react'
+import { PrimaryButton } from '@/components/ui/primary-button'
+import { Button } from '@/components/ui/button'
 
 // Mock subscription data
 const mockSubscription = {
@@ -54,12 +56,14 @@ export default function SubscriptionDetailPage() {
     <div className="flex flex-col min-h-screen bg-white">
       {/* Header */}
       <div className="flex items-center justify-center px-4 py-4 border-b border-gray-200 relative">
-        <button
+        <Button
           onClick={() => router.back()}
-          className="absolute left-4 p-2 hover:bg-gray-100 rounded-full transition-colors"
+          variant="ghost"
+          size="icon"
+          className="absolute left-4 p-2 rounded-full"
         >
           <ChevronLeft className="w-6 h-6 text-gray-700" />
-        </button>
+        </Button>
         
         <h1 className="text-xl font-semibold text-gray-900">
           Subscription
@@ -80,20 +84,21 @@ export default function SubscriptionDetailPage() {
 
           {/* Action Buttons */}
           <div className="flex gap-4 w-full max-w-md">
-            <button
+            <PrimaryButton
               onClick={handleMessage}
-              className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-full transition-colors"
+              className="flex-1 flex items-center justify-center gap-2"
             >
               <Send className="w-5 h-5" />
               <span>Message</span>
-            </button>
+            </PrimaryButton>
             
-            <button
+            <Button
               onClick={handleUnsubscribe}
-              className="flex-1 px-6 py-3.5 bg-white hover:bg-gray-50 border border-gray-300 text-gray-900 font-medium rounded-full transition-colors"
+              variant="outline"
+              className="flex-1 rounded-full"
             >
               Unsubscribe
-            </button>
+            </Button>
           </div>
         </div>
 

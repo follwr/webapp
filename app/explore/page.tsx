@@ -9,6 +9,8 @@ import { Search } from 'lucide-react'
 import { creatorsApi } from '@/lib/api/creators'
 import { CreatorProfile } from '@/lib/types'
 import { getCreatorDisplayName, getCreatorUsername, getCreatorProfilePicture } from '@/lib/utils/profile'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 
 export default function ExplorePage() {
   const { user, loading } = useAuth()
@@ -119,17 +121,18 @@ export default function ExplorePage() {
         <div className="fixed top-0 left-0 right-0 z-50 bg-white pt-2">
           <div className="bg-gray-100 rounded-2xl mx-4 mt-2 p-1 flex">
             {tabs.map((tab) => (
-              <button
+              <Button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
+                variant="ghost"
                 className={`flex-1 py-2 px-4 rounded-xl font-medium transition-colors ${
                   activeTab === tab
-                    ? 'bg-white text-blue-600 shadow-sm'
-                    : 'text-gray-600'
+                    ? 'bg-white text-blue-600 shadow-sm hover:bg-white'
+                    : 'text-gray-600 hover:bg-transparent'
                 }`}
               >
                 {tab}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
@@ -153,30 +156,31 @@ export default function ExplorePage() {
         {/* Tabs */}
         <div className="bg-gray-100 rounded-2xl mx-4 mt-4 p-1 flex">
           {tabs.map((tab) => (
-            <button
+            <Button
               key={tab}
               onClick={() => setActiveTab(tab)}
+              variant="ghost"
               className={`flex-1 py-2 px-4 rounded-xl font-medium transition-colors ${
                 activeTab === tab
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600'
+                  ? 'bg-white text-blue-600 shadow-sm hover:bg-white'
+                  : 'text-gray-600 hover:bg-transparent'
               }`}
             >
               {tab}
-            </button>
+            </Button>
           ))}
         </div>
 
         {/* Search Bar */}
         <div className="mx-4 mt-6 mb-6">
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 z-10" />
+            <Input
               type="text"
               placeholder="Search for a creator"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-gray-100 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-12 pr-4 py-3 bg-gray-100 rounded-2xl border-0"
             />
           </div>
         </div>
@@ -187,17 +191,18 @@ export default function ExplorePage() {
         {/* Sort Options */}
         <div className="flex gap-2 px-4 mb-6 overflow-x-auto no-scrollbar">
           {(['trending', 'newest', 'popular'] as const).map((sort) => (
-            <button
+            <Button
               key={sort}
               onClick={() => setSortBy(sort)}
-              className={`px-4 py-2 rounded-full font-medium whitespace-nowrap transition-colors ${
+              variant={sortBy === sort ? 'default' : 'secondary'}
+              className={`rounded-full whitespace-nowrap ${
                 sortBy === sort
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                  ? 'bg-blue-500 hover:bg-blue-600 text-white'
+                  : ''
               }`}
             >
               {sort.charAt(0).toUpperCase() + sort.slice(1)}
-            </button>
+            </Button>
           ))}
         </div>
 

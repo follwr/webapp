@@ -5,6 +5,9 @@ import { useAuth } from '@/components/auth/auth-provider'
 import { useRouter } from 'next/navigation'
 import { ChevronLeft, Upload, X } from 'lucide-react'
 import { PrimaryButton } from '@/components/ui/primary-button'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import Image from 'next/image'
 
 interface ProductFile {
@@ -109,12 +112,14 @@ export default function CreateProductPage() {
     <div className="flex flex-col min-h-screen bg-white">
       {/* Header */}
       <div className="flex items-center justify-center px-4 py-4 border-b border-gray-200 relative">
-        <button
+        <Button
           onClick={() => router.back()}
-          className="absolute left-4 p-2 hover:bg-gray-100 rounded-full transition-colors"
+          variant="ghost"
+          size="icon"
+          className="absolute left-4 p-2 rounded-full"
         >
           <ChevronLeft className="w-6 h-6 text-gray-700" />
-        </button>
+        </Button>
         
         <h1 className="text-xl font-semibold text-gray-900">
           Add product
@@ -148,15 +153,17 @@ export default function CreateProductPage() {
                 <p className="text-xs text-gray-500 mb-2">
                   Jpg, png, svg
                 </p>
-                <button
+                <Button
                   onClick={() => imageInputRef.current?.click()}
-                  className="px-4 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 text-gray-900 font-medium rounded-full transition-colors"
+                  variant="secondary"
+                  size="sm"
+                  className="px-4 py-1.5 text-sm rounded-full"
                 >
                   Upload
-                </button>
+                </Button>
               </div>
             </div>
-            <input
+            <Input
               ref={imageInputRef}
               type="file"
               accept="image/*"
@@ -171,12 +178,12 @@ export default function CreateProductPage() {
               <label className="block text-xs text-gray-500 mb-1.5">
                 Product name
               </label>
-              <input
+              <Input
                 type="text"
                 value={productName}
                 onChange={(e) => setProductName(e.target.value)}
                 placeholder="My fitness Program"
-                className="w-full text-base text-gray-900 placeholder-gray-400 border-none outline-none bg-transparent"
+                className="w-full text-base text-gray-900 placeholder-gray-400 border-none outline-none bg-transparent p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
               />
             </div>
           </div>
@@ -187,12 +194,12 @@ export default function CreateProductPage() {
               <label className="block text-xs text-gray-500 mb-1.5">
                 Description
               </label>
-              <textarea
+              <Textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Ready to transform your body and mindset? This program is built to help you get stronger, leaner, and more energized — without the guesswork."
                 rows={5}
-                className="w-full text-sm text-gray-900 placeholder-gray-400 border-none outline-none bg-transparent resize-none leading-relaxed"
+                className="w-full text-sm text-gray-900 placeholder-gray-400 border-none outline-none bg-transparent resize-none leading-relaxed p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
               />
             </div>
           </div>
@@ -205,12 +212,12 @@ export default function CreateProductPage() {
                 <label className="block text-xs text-gray-500 mb-0.5">
                   Price
                 </label>
-                <input
+                <Input
                   type="number"
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
                   placeholder="5"
-                  className="w-full text-xl text-gray-900 placeholder-gray-400 border-none outline-none bg-transparent"
+                  className="w-full text-xl text-gray-900 placeholder-gray-400 border-none outline-none bg-transparent p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
                   min="0"
                   step="0.01"
                 />
@@ -236,12 +243,14 @@ export default function CreateProductPage() {
                           {formatFileSize(file.size)}
                         </p>
                       </div>
-                      <button
+                      <Button
                         onClick={() => removeFile(file.id)}
-                        className="ml-3 p-1 hover:bg-gray-200 rounded-full transition-colors"
+                        variant="ghost"
+                        size="icon"
+                        className="ml-3 p-1 h-auto w-auto rounded-full"
                       >
                         <X className="w-4 h-4 text-gray-600" />
-                      </button>
+                      </Button>
                     </div>
                   ))}
                 </div>
@@ -263,14 +272,15 @@ export default function CreateProductPage() {
                   </p>
                 </div>
               )}
-              <button
+              <Button
                 onClick={() => filesInputRef.current?.click()}
-                className="w-full px-5 py-2.5 text-sm bg-gray-100 hover:bg-gray-200 text-gray-900 font-medium rounded-full transition-colors"
+                variant="secondary"
+                className="w-full px-5 py-2.5 text-sm rounded-full"
               >
                 Upload
-              </button>
+              </Button>
             </div>
-            <input
+            <Input
               ref={filesInputRef}
               type="file"
               multiple

@@ -4,6 +4,9 @@ import { useParams, useRouter } from 'next/navigation'
 import { ChevronLeft, Camera, DollarSign, Image as ImageIcon, Send, X } from 'lucide-react'
 import { useState, useRef } from 'react'
 import { SetPriceModal } from '@/components/messages/set-price-modal'
+import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
+import { Input } from '@/components/ui/input'
 
 interface MediaFile {
   id: string
@@ -115,12 +118,14 @@ export default function ChatThreadPage() {
     <div className="flex flex-col h-screen bg-white">
       {/* Header */}
       <div className="flex items-center gap-4 px-4 py-3 border-b border-gray-200 bg-white sticky top-0 z-10">
-        <button
+        <Button
           onClick={() => router.back()}
-          className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors"
+          variant="ghost"
+          size="icon"
+          className="p-2 -ml-2 rounded-full"
         >
           <ChevronLeft className="w-6 h-6 text-gray-700" />
-        </button>
+        </Button>
 
         <div className="relative">
           <div className="w-12 h-12 rounded-full bg-blue-400 flex-shrink-0" />
@@ -205,12 +210,13 @@ export default function ChatThreadPage() {
                     )}
                   </div>
                   {/* Remove Button */}
-                  <button
+                  <Button
                     onClick={() => removeMedia(media.id)}
-                    className="absolute -top-2 -right-2 w-7 h-7 bg-blue-600 hover:bg-blue-700 rounded-full flex items-center justify-center transition-colors shadow-lg"
+                    size="icon"
+                    className="absolute -top-2 -right-2 w-7 h-7 bg-blue-600 hover:bg-blue-700 rounded-full shadow-lg"
                   >
                     <X className="w-4 h-4 text-white" strokeWidth={3} />
-                  </button>
+                  </Button>
                 </div>
               ))}
             </div>
@@ -220,7 +226,7 @@ export default function ChatThreadPage() {
         {/* Message Text Area */}
         {(mediaFiles.length > 0 || message) && (
           <div className="mb-4">
-            <textarea
+            <Textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Add a caption..."
@@ -230,7 +236,7 @@ export default function ChatThreadPage() {
         )}
 
         {/* Hidden file inputs */}
-        <input
+        <Input
           ref={imageInputRef}
           type="file"
           accept="image/*"
@@ -238,7 +244,7 @@ export default function ChatThreadPage() {
           onChange={handleImageUpload}
           className="hidden"
         />
-        <input
+        <Input
           ref={videoInputRef}
           type="file"
           accept="video/*"
@@ -251,7 +257,7 @@ export default function ChatThreadPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             {/* Set Price Button */}
-            <button
+            <Button
               onClick={() => {
                 if (mediaFiles.length === 0) {
                   alert('Please attach media first')
@@ -259,10 +265,11 @@ export default function ChatThreadPage() {
                 }
                 setIsPriceModalOpen(true)
               }}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-full transition-colors ${
+              variant="secondary"
+              className={`flex items-center gap-2 rounded-full ${
                 mediaFiles.some((m) => m.price)
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                  ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                  : ''
               }`}
             >
               <DollarSign className="w-5 h-5" strokeWidth={2.5} />
@@ -271,25 +278,28 @@ export default function ChatThreadPage() {
                   ? `$${mediaFiles[0]?.price}`
                   : 'Set Price'}
               </span>
-            </button>
+            </Button>
 
             {/* Image Button */}
-            <button
+            <Button
               onClick={() => imageInputRef.current?.click()}
-              className="p-2.5 hover:bg-gray-100 rounded-full transition-colors"
+              variant="ghost"
+              size="icon"
+              className="p-2.5 rounded-full"
             >
               <ImageIcon className="w-6 h-6 text-gray-600" strokeWidth={2} />
-            </button>
+            </Button>
           </div>
 
           {/* Send Button */}
-          <button
+          <Button
             onClick={handleSend}
             disabled={!message.trim() && mediaFiles.length === 0}
-            className="p-3 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-full transition-colors"
+            size="icon"
+            className="p-3 bg-blue-500 hover:bg-blue-600 rounded-full"
           >
             <Send className="w-5 h-5 text-white" fill="white" strokeWidth={2} />
-          </button>
+          </Button>
         </div>
       </div>
 

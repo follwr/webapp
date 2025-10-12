@@ -60,9 +60,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchCreatorProfile = async () => {
     try {
       const profile = await creatorsApi.getMyProfile()
-      setCreatorProfile(profile)
-    } catch {
-      // User is not a creator - this is fine
+      // API now returns { data: profile } or { data: null }
+      setCreatorProfile(profile || null)
+    } catch (error) {
+      // If there's an actual error, log it but still set to null
+      console.error('Error fetching creator profile:', error)
       setCreatorProfile(null)
     }
   }
