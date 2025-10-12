@@ -37,6 +37,14 @@ export const creatorsApi = {
     return response.data
   },
 
+  // Get creator by user ID
+  getByUserId: async (userId: string) => {
+    const response = await apiClient.get<CreatorProfile>(
+      `/creators/user/${userId}`
+    )
+    return response.data
+  },
+
   // Get creator stats
   getStats: async (creatorId: string) => {
     const response = await apiClient.get<{ data: { totalPosts: number; totalLikes: number; totalSubscribers: number; totalEarnings: number } }>(

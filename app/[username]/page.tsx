@@ -225,14 +225,17 @@ export default function CreatorProfilePage() {
               >
                 <DollarSign className="w-5 h-5 text-gray-900" strokeWidth={2} />
               </Button>
-              <Button
-                onClick={handleMessage}
-                size="icon"
-                variant="secondary"
-                className="w-10 h-10 bg-white hover:bg-gray-100 rounded-full shadow-lg"
-              >
-                <MessageCircle className="w-5 h-5 text-gray-900" strokeWidth={2} />
-              </Button>
+              {/* Only show message icon if subscribed */}
+              {isSubscribed && (
+                <Button
+                  onClick={handleMessage}
+                  size="icon"
+                  variant="secondary"
+                  className="w-10 h-10 bg-white hover:bg-gray-100 rounded-full shadow-lg"
+                >
+                  <MessageCircle className="w-5 h-5 text-gray-900" strokeWidth={2} />
+                </Button>
+              )}
             </div>
           )}
 

@@ -1,55 +1,72 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Search, Shield, Edit } from 'lucide-react'
 import { ChatListItem } from './chat-list-item'
-
-// Mock chat data
-const mockChats = [
-  {
-    id: '1',
-    userName: 'John Doe',
-    lastMessage: 'Can you please send more',
-    timestamp: '19:24',
-    isUnread: true,
-    isFromYou: false,
-  },
-  {
-    id: '2',
-    userName: 'John Doe',
-    lastMessage: 'No worries John, talk soon!',
-    timestamp: '19:24',
-    isUnread: false,
-    isFromYou: true,
-  },
-  {
-    id: '3',
-    userName: 'John Doe',
-    lastMessage: 'No worries John, talk soon!',
-    timestamp: '19:24',
-    isUnread: false,
-    isFromYou: true,
-  },
-  {
-    id: '4',
-    userName: 'John Doe',
-    lastMessage: 'No worries John, talk soon!',
-    timestamp: '19:24',
-    isUnread: false,
-    isFromYou: true,
-  },
-]
+import { messagesApi, Conversation } from '@/lib/api/messages'
 
 export function CreatorMessages() {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
-  const [showMockChats, setShowMockChats] = useState(true)
+  const [conversations, setConversations] = useState<Conversation[]>([])
+  const [loading, setLoading] = useState(true)
+  const hasLoadedRef = useRef(false)
 
-  // Filter chats based on search
-  const filteredChats = mockChats.filter((chat) =>
-    chat.userName.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  useEffect(() => {
+    if (!hasLoadedRef.current) {
+      hasLoadedRef.current = true
+      loadConversations()
+    }
+  }, [])
+
+  const loadConversations = async () => {
+    try {
+      setLoading(true)
+      const data = await messagesApi.getConversations()
+      setConversations(data)
+    } catch (error) {
+      console.error('Failed to load conversations:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Filter conversations based on search
+  const filteredConversations = conversations.filter((conv) => {
+    const name = conv.partnerCreator?.displayName || conv.partnerCreator?.username || 'User'
+    return name.toLowerCase().includes(searchQuery.toLowerCase())
+  })
+
+  const getConversationName = (conv: Conversation) => {
+    return conv.partnerCreator?.displayName || conv.partnerCreator?.username || 'User'
+  }
+
+  const getConversationAvatar = (conv: Conversation) => {
+    return conv.partnerCreator?.profilePictureUrl
+  }
+
+  const formatTimestamp = (date: string) => {
+    const d = new Date(date)
+    const now = new Date()
+    const diff = now.getTime() - d.getTime()
+    const minutes = Math.floor(diff / 60000)
+    const hours = Math.floor(diff / 3600000)
+    const days = Math.floor(diff / 86400000)
+
+    if (minutes < 60) return `${minutes}m`
+    if (hours < 24) return `${hours}h`
+    if (days < 7) return `${days}d`
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[80vh]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
@@ -81,34 +98,29 @@ export function CreatorMessages() {
       </div>
 
       {/* Broadcast Message Button */}
-      <div className="px-6 pb-4 flex items-center gap-3">
+      <div className="px-6 pb-4">
         <button 
           onClick={() => router.push('/messages/broadcast')}
           className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium rounded-full transition-colors"
         >
           Broadcast Message
         </button>
-        {/* Mock data toggle */}
-        <button
-          onClick={() => setShowMockChats(!showMockChats)}
-          className="px-4 py-2 text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium rounded-full transition-colors"
-        >
-          {showMockChats ? 'Hide' : 'Show'} Mock Chats
-        </button>
       </div>
 
       {/* Chat List or Empty State */}
-      {showMockChats && filteredChats.length > 0 ? (
+      {filteredConversations.length > 0 ? (
         <div className="flex-1 overflow-y-auto">
-          {filteredChats.map((chat) => (
+          {filteredConversations.map((conv) => (
             <ChatListItem
-              key={chat.id}
-              id={chat.id}
-              userName={chat.userName}
-              lastMessage={chat.lastMessage}
-              timestamp={chat.timestamp}
-              isUnread={chat.isUnread}
-              isFromYou={chat.isFromYou}
+              key={conv.partnerId}
+              id={conv.partnerId}
+              userName={getConversationName(conv)}
+              lastMessage={conv.lastMessage?.content || 'Media message'}
+              timestamp={formatTimestamp(conv.lastMessage?.createdAt)}
+              isUnread={conv.unreadCount > 0}
+              isFromYou={conv.lastMessage?.senderId !== conv.partnerId}
+              avatarUrl={getConversationAvatar(conv)}
+              isVerified={conv.partnerCreator?.isVerified}
             />
           ))}
         </div>

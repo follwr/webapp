@@ -1,12 +1,16 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
-import { ChevronLeft, Camera, DollarSign, Image as ImageIcon, Send, X } from 'lucide-react'
-import { useState, useRef } from 'react'
+import { ChevronLeft, Camera, DollarSign, Image as ImageIcon, Send, X, MessageCircle } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
+import { useAuth } from '@/components/auth/auth-provider'
 import { SetPriceModal } from '@/components/messages/set-price-modal'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
+import { messagesApi, Message } from '@/lib/api/messages'
+import { creatorsApi } from '@/lib/api/creators'
+import { uploadApi } from '@/lib/api/upload'
 
 interface MediaFile {
   id: string
@@ -16,57 +20,98 @@ interface MediaFile {
   price?: string
 }
 
-// Mock message data
-const mockMessages = [
-  {
-    id: '1',
-    text: 'Hello! 👋 How are you?',
-    isFromMe: false,
-    timestamp: '10:30',
-  },
-  {
-    id: '2',
-    text: 'I want a refund',
-    isFromMe: true,
-    timestamp: '10:45',
-  },
-  {
-    id: '3',
-    text: 'No refunds, sorry!',
-    isFromMe: false,
-    timestamp: '11:00',
-  },
-  {
-    id: '4',
-    text: 'Definitely not fair, I did not get what I paid for, please can I speak to the manager',
-    isFromMe: true,
-    timestamp: '11:15',
-  },
-  {
-    id: '5',
-    text: 'Sorry, the manager is busy',
-    isFromMe: false,
-    timestamp: '11:30',
-  },
-]
-
-// Mock user data
-const mockUser = {
-  name: 'Hollycanning',
-  isVerified: true,
-  isOnline: true,
-  avatarUrl: null,
+interface PartnerProfile {
+  userId: string
+  displayName: string
+  username: string
+  profilePictureUrl?: string
+  isVerified: boolean
 }
 
 export default function ChatThreadPage() {
   const params = useParams()
   const router = useRouter()
+  const { user, loading: authLoading } = useAuth()
+  const chatId = params.chatId as string // This is the userId of the chat partner
+  
   const [message, setMessage] = useState('')
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([])
   const [isPriceModalOpen, setIsPriceModalOpen] = useState(false)
   const [tempPrice, setTempPrice] = useState('')
+  const [messages, setMessages] = useState<Message[]>([])
+  const [partner, setPartner] = useState<PartnerProfile | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [sending, setSending] = useState(false)
   const imageInputRef = useRef<HTMLInputElement>(null)
   const videoInputRef = useRef<HTMLInputElement>(null)
+  const loadDataRef = useRef<(() => Promise<void>) | null>(null)
+  const refreshMessagesRef = useRef<(() => Promise<void>) | null>(null)
+  const loadingRequestRef = useRef<string | null>(null)
+
+  // Create loadData function for initial load
+  const loadData = async () => {
+    try {
+      setLoading(true)
+      
+      // Load partner profile - try to get creator profile first
+      try {
+        const creatorProfile = await creatorsApi.getByUserId(chatId)
+        setPartner({
+          userId: creatorProfile.userId,
+          displayName: creatorProfile.displayName || creatorProfile.userProfile?.displayName || creatorProfile.username || creatorProfile.userProfile?.username || 'User',
+          username: creatorProfile.username || creatorProfile.userProfile?.username || 'user',
+          profilePictureUrl: creatorProfile.profilePictureUrl || creatorProfile.userProfile?.profilePictureUrl,
+          isVerified: creatorProfile.isVerified || false,
+        })
+      } catch (error) {
+        // If not a creator, set basic profile
+        setPartner({
+          userId: chatId,
+          displayName: 'User',
+          username: 'user',
+          isVerified: false,
+        })
+      }
+
+      // Load messages
+      const messagesData = await messagesApi.getMessages(chatId)
+      setMessages(messagesData)
+    } catch (error) {
+      console.error('Failed to load chat data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Create refreshMessages function for reloading messages only (no loading state)
+  const refreshMessages = async () => {
+    try {
+      const messagesData = await messagesApi.getMessages(chatId)
+      setMessages(messagesData)
+    } catch (error) {
+      console.error('Failed to refresh messages:', error)
+    }
+  }
+
+  // Store functions in refs
+  loadDataRef.current = loadData
+  refreshMessagesRef.current = refreshMessages
+
+  // Load messages and partner profile
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/auth/login')
+      return
+    }
+
+    if (!authLoading && user && chatId) {
+      // Prevent duplicate loads for the same chatId
+      if (loadingRequestRef.current === chatId) return
+      loadingRequestRef.current = chatId
+      
+      loadDataRef.current?.()
+    }
+  }, [authLoading, user, chatId, router])
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
@@ -74,11 +119,12 @@ export default function ChatThreadPage() {
       Array.from(files).forEach((file) => {
         const reader = new FileReader()
         reader.onloadend = () => {
+          const isVideo = file.type.startsWith('video/')
           setMediaFiles((prev) => [
             ...prev,
             {
               id: Math.random().toString(36).substr(2, 9),
-              type: 'image',
+              type: isVideo ? 'video' : 'image',
               url: reader.result as string,
               file,
             },
@@ -102,16 +148,83 @@ export default function ChatThreadPage() {
           price: tempPrice,
         }))
       )
+      setIsPriceModalOpen(false)
     }
   }
 
-  const handleSend = () => {
-    if (message.trim() || mediaFiles.length > 0) {
-      console.log('Sending message:', message, 'with media:', mediaFiles)
+  const handleSend = async () => {
+    if ((!message.trim() && mediaFiles.length === 0) || sending) return
+
+    try {
+      setSending(true)
+      
+      // Upload media files if any
+      let uploadedUrls: string[] = []
+      if (mediaFiles.length > 0) {
+        const uploadPromises = mediaFiles.map(media => 
+          uploadApi.uploadFileComplete(media.file)
+        )
+        uploadedUrls = await Promise.all(uploadPromises)
+      }
+
+      // Send message
+      const price = mediaFiles.length > 0 && tempPrice ? parseFloat(tempPrice) : undefined
+      await messagesApi.sendMessage({
+        recipientId: chatId,
+        content: message.trim() || undefined,
+        mediaUrls: uploadedUrls.length > 0 ? uploadedUrls : undefined,
+        price,
+      })
+
+      // Clear form
       setMessage('')
       setMediaFiles([])
       setTempPrice('')
+
+      // Refresh messages (without showing loading screen)
+      await refreshMessagesRef.current?.()
+    } catch (error: any) {
+      console.error('Failed to send message:', error)
+      alert(error.response?.data?.message || 'Failed to send message. Please try again.')
+    } finally {
+      setSending(false)
     }
+  }
+
+  const formatMessageTime = (date: string) => {
+    const d = new Date(date)
+    return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+  }
+
+  const formatMessageDate = (date: string) => {
+    const d = new Date(date)
+    const today = new Date()
+    const yesterday = new Date(today)
+    yesterday.setDate(yesterday.getDate() - 1)
+
+    if (d.toDateString() === today.toDateString()) {
+      return 'Today'
+    } else if (d.toDateString() === yesterday.toDateString()) {
+      return 'Yesterday'
+    } else {
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    }
+  }
+
+  if (loading || authLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
+
+  if (!partner) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-gray-500">User not found</p>
+      </div>
+    )
   }
 
   return (
@@ -128,18 +241,23 @@ export default function ChatThreadPage() {
         </Button>
 
         <div className="relative">
-          <div className="w-12 h-12 rounded-full bg-blue-400 flex-shrink-0" />
-          {mockUser.isOnline && (
-            <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full" />
+          {partner.profilePictureUrl ? (
+            <img 
+              src={partner.profilePictureUrl} 
+              alt={partner.displayName}
+              className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+            />
+          ) : (
+            <div className="w-12 h-12 rounded-full bg-blue-400 flex-shrink-0" />
           )}
         </div>
 
         <div className="flex-1">
           <div className="flex items-center gap-1.5">
             <h2 className="font-semibold text-gray-900 text-lg">
-              {mockUser.name}
+              {partner.displayName}
             </h2>
-            {mockUser.isVerified && (
+            {partner.isVerified && (
               <svg className="w-5 h-5 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
                 <circle cx="12" cy="12" r="10" fill="currentColor"/>
@@ -148,43 +266,103 @@ export default function ChatThreadPage() {
             )}
           </div>
           <p className="text-sm text-gray-500">
-            {mockUser.isOnline ? 'Online' : 'Offline'}
+            @{partner.username}
           </p>
         </div>
       </div>
 
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto px-4 py-6 bg-gray-50">
-        {/* Date Divider */}
-        <div className="flex justify-center mb-6">
-          <span className="text-sm font-semibold text-gray-900">Yesterday</span>
-        </div>
-
-        {/* Messages */}
-        <div className="space-y-4">
-          {mockMessages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`flex ${msg.isFromMe ? 'justify-end' : 'justify-start'}`}
-            >
-              {/* Avatar for received messages */}
-              {!msg.isFromMe && (
-                <div className="w-10 h-10 rounded-full bg-blue-400 flex-shrink-0 mr-3" />
-              )}
-
-              {/* Message Bubble */}
-              <div
-                className={`max-w-[75%] px-5 py-3 rounded-3xl ${
-                  msg.isFromMe
-                    ? 'bg-blue-500 text-white rounded-br-md'
-                    : 'bg-white text-gray-900 rounded-bl-md'
-                }`}
-              >
-                <p className="text-[15px] leading-relaxed">{msg.text}</p>
+        {messages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-center">
+            <MessageCircle className="w-16 h-16 text-gray-300 mb-4" />
+            <p className="text-gray-500">No messages yet</p>
+            <p className="text-gray-400 text-sm mt-2">Start the conversation!</p>
+          </div>
+        ) : (
+          <>
+            {/* Date Divider - show date of first message */}
+            {messages.length > 0 && (
+              <div className="flex justify-center mb-6">
+                <span className="text-sm font-semibold text-gray-900">
+                  {formatMessageDate(messages[0].createdAt)}
+                </span>
               </div>
+            )}
+
+            {/* Messages */}
+            <div className="space-y-4">
+              {messages.map((msg) => {
+                const isFromMe = msg.senderId === user?.id
+                return (
+                  <div
+                    key={msg.id}
+                    className={`flex ${isFromMe ? 'justify-end' : 'justify-start'}`}
+                  >
+                    {/* Avatar for received messages */}
+                    {!isFromMe && (
+                      <div className="w-10 h-10 rounded-full bg-blue-400 flex-shrink-0 mr-3 overflow-hidden">
+                        {partner.profilePictureUrl ? (
+                          <img 
+                            src={partner.profilePictureUrl} 
+                            alt={partner.displayName}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : null}
+                      </div>
+                    )}
+
+                    {/* Message Bubble */}
+                    <div className="flex flex-col max-w-[75%]">
+                      {/* Media */}
+                      {msg.mediaUrls && msg.mediaUrls.length > 0 && (
+                        <div className="mb-2 space-y-2">
+                          {msg.mediaUrls.map((url, idx) => {
+                            const isVideo = url.includes('.mp4') || url.includes('.mov') || url.includes('.webm')
+                            return (
+                              <div key={idx} className="rounded-2xl overflow-hidden max-w-xs">
+                                {isVideo ? (
+                                  <video src={url} controls className="w-full" />
+                                ) : (
+                                  <img src={url} alt="Message media" className="w-full" />
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                      
+                      {/* Text Content */}
+                      {msg.content && (
+                        <div
+                          className={`px-5 py-3 rounded-3xl ${
+                            isFromMe
+                              ? 'bg-blue-500 text-white rounded-br-md'
+                              : 'bg-white text-gray-900 rounded-bl-md'
+                          }`}
+                        >
+                          <p className="text-[15px] leading-relaxed">{msg.content}</p>
+                        </div>
+                      )}
+
+                      {/* Price indicator */}
+                      {msg.price && msg.price > 0 && (
+                        <div className="text-xs text-gray-500 mt-1 px-2">
+                          💰 ${msg.price}
+                        </div>
+                      )}
+
+                      {/* Timestamp */}
+                      <div className={`text-xs text-gray-400 mt-1 px-2 ${isFromMe ? 'text-right' : 'text-left'}`}>
+                        {formatMessageTime(msg.createdAt)}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
-          ))}
-        </div>
+          </>
+        )}
       </div>
 
       {/* Input Area */}
@@ -224,16 +402,14 @@ export default function ChatThreadPage() {
         )}
 
         {/* Message Text Area */}
-        {(mediaFiles.length > 0 || message) && (
-          <div className="mb-4">
-            <Textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Add a caption..."
-              className="w-full px-4 py-3 bg-gray-50 rounded-2xl border-none focus:outline-none resize-none text-gray-900 placeholder-gray-400 min-h-[80px]"
-            />
-          </div>
-        )}
+        <div className="mb-4">
+          <Textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder={mediaFiles.length > 0 ? "Add a caption..." : "Type a message..."}
+            className="w-full px-4 py-3 bg-gray-50 rounded-2xl border-none focus:outline-none resize-none text-gray-900 placeholder-gray-400 min-h-[80px]"
+          />
+        </div>
 
         {/* Hidden file inputs */}
         <Input
@@ -294,11 +470,15 @@ export default function ChatThreadPage() {
           {/* Send Button */}
           <Button
             onClick={handleSend}
-            disabled={!message.trim() && mediaFiles.length === 0}
+            disabled={(!message.trim() && mediaFiles.length === 0) || sending}
             size="icon"
-            className="p-3 bg-blue-500 hover:bg-blue-600 rounded-full"
+            className="p-3 bg-blue-500 hover:bg-blue-600 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Send className="w-5 h-5 text-white" fill="white" strokeWidth={2} />
+            {sending ? (
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+            ) : (
+              <Send className="w-5 h-5 text-white" fill="white" strokeWidth={2} />
+            )}
           </Button>
         </div>
       </div>
