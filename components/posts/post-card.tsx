@@ -6,6 +6,7 @@ import { Post } from '@/lib/types'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Heart, MessageCircle, Info, Share2, Bookmark, MoreVertical, CheckCircle2, Lock, Volume2, VolumeX } from 'lucide-react'
 import { postsApi } from '@/lib/api/posts'
+import { savedApi } from '@/lib/api/saved'
 import { formatDistanceToNow } from 'date-fns'
 import { getCreatorDisplayName, getCreatorUsername, getCreatorProfilePicture } from '@/lib/utils/profile'
 import { Button } from '@/components/ui/button'
@@ -17,7 +18,7 @@ interface PostCardProps {
 export function PostCard({ post }: PostCardProps) {
   const [isLiked, setIsLiked] = useState(post.isLiked || false)
   const [likeCount, setLikeCount] = useState(post.totalLikes)
-  const [isSaved, setIsSaved] = useState(false)
+  const [isSaved, setIsSaved] = useState(post.isSaved || false)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isMuted, setIsMuted] = useState(true)
   const videoRef = useRef<HTMLVideoElement | null>(null)
@@ -36,9 +37,17 @@ export function PostCard({ post }: PostCardProps) {
     }
   }
 
-  const handleSave = () => {
-    setIsSaved(!isSaved)
-    // TODO: Implement save API call
+  const handleSave = async () => {
+    try {
+      if (isSaved) {
+        await savedApi.unsavePost(post.id)
+      } else {
+        await savedApi.savePost(post.id)
+      }
+      setIsSaved(!isSaved)
+    } catch (err) {
+      console.error('Failed to toggle save:', err)
+    }
   }
 
   const handleVideoClick = (e: React.MouseEvent<HTMLVideoElement>) => {

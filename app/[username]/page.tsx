@@ -26,7 +26,9 @@ export default function CreatorProfilePage() {
   const [posts, setPosts] = useState<Post[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [isFollowing, setIsFollowing] = useState(false)
+  const [isSubscribed, setIsSubscribed] = useState(false)
   const [isHoveringFollow, setIsHoveringFollow] = useState(false)
+  const [isHoveringSubscribe, setIsHoveringSubscribe] = useState(false)
   const [loadingData, setLoadingData] = useState(true)
   const [subscribing, setSubscribing] = useState(false)
   const hasFetchedRef = useRef<string | null>(null)
@@ -70,8 +72,9 @@ export default function CreatorProfilePage() {
         }))
         setPosts(postsWithCreator)
         
-        // Set follow status from backend response
+        // Set follow and subscription status from backend response
         setIsFollowing(data.isFollowing || false)
+        setIsSubscribed(data.isSubscribed || false)
 
         // Fetch products
         if (data.id) {
@@ -92,6 +95,14 @@ export default function CreatorProfilePage() {
 
   const handleSubscribe = async () => {
     if (!creator) return
+    
+    // If already subscribed, handle unsubscribe
+    if (isSubscribed) {
+      // TODO: Get subscription ID and call unsubscribe
+      // For now, navigate to subscriptions page to manage
+      router.push('/subscriptions')
+      return
+    }
     
     if (!creator.subscriptionPrice || creator.subscriptionPrice === 0) {
       alert('This creator hasn\'t set up subscriptions yet')
@@ -242,12 +253,22 @@ export default function CreatorProfilePage() {
             <>
               <PrimaryButton
                 onClick={handleSubscribe}
+                onMouseEnter={() => setIsHoveringSubscribe(true)}
+                onMouseLeave={() => setIsHoveringSubscribe(false)}
                 disabled={subscribing}
                 isLoading={subscribing}
-                className="flex-1 flex items-center justify-center gap-2"
+                className={`flex-1 flex items-center justify-center gap-2 ${
+                  isSubscribed && isHoveringSubscribe
+                    ? 'bg-red-500 hover:bg-red-600'
+                    : isSubscribed
+                    ? 'bg-green-600 hover:bg-green-700'
+                    : ''
+                }`}
               >
                 {subscribing ? (
                   <span>Loading...</span>
+                ) : isSubscribed ? (
+                  <span>{isHoveringSubscribe ? 'Manage Subscription' : 'Subscribed'}</span>
                 ) : (
                   <>
                     <UserPlus className="w-5 h-5" strokeWidth={2} />

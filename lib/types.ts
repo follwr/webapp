@@ -24,6 +24,7 @@ export interface CreatorProfile {
   coverImageUrl?: string
   isVerified: boolean
   isFollowing?: boolean
+  isSubscribed?: boolean
   subscriptionPrice?: number
   stripePriceId?: string
   stripeAccountId?: string
@@ -58,6 +59,7 @@ export interface Post {
   updatedAt: string
   creator?: CreatorProfile
   isLiked?: boolean
+  isSaved?: boolean
   hasPurchased?: boolean
   requiresPurchase?: boolean
   hasAccess?: boolean
