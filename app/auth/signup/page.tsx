@@ -6,8 +6,9 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import { PrimaryButton } from '@/components/ui/primary-button'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, Mail } from 'lucide-react'
 
 export default function SignupPage() {
   const [fullName, setFullName] = useState('')
@@ -17,6 +18,7 @@ export default function SignupPage() {
   const [agreeToTerms, setAgreeToTerms] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [emailSent, setEmailSent] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -53,30 +55,84 @@ export default function SignupPage() {
     }
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             full_name: fullName,
-          }
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         }
       })
 
       if (error) throw error
 
-      // Wait a moment for auth state to initialize before redirecting
-      await new Promise(resolve => setTimeout(resolve, 500))
-      
-      // Redirect to feed
-      router.push('/feed')
-      router.refresh()
+      // Check if email confirmation is required
+      if (data?.user && !data.session) {
+        // Email confirmation required
+        setEmailSent(true)
+        setLoading(false)
+        return
+      }
+
+      // If session exists (auto-confirmed), redirect to feed
+      if (data.session) {
+        await new Promise(resolve => setTimeout(resolve, 500))
+        router.push('/feed')
+        router.refresh()
+      }
     } catch (err) {
       const error = err as Error
       setError(error.message || 'An error occurred during signup')
     } finally {
       setLoading(false)
     }
+  }
+
+  // Show email confirmation screen if email was sent
+  if (emailSent) {
+    return (
+      <div
+        className="min-h-screen relative"
+        style={{
+          background:
+            'linear-gradient(180deg, #B3E7FF 0%, rgba(179, 231, 255, 0) 66.27%)',
+        }}
+      >
+        <div className="flex items-center justify-center min-h-screen px-4">
+          <div className="w-full max-w-md text-center">
+            <div className="bg-white rounded-3xl p-8 shadow-lg">
+              <div className="w-20 h-20 mx-auto mb-6 bg-blue-100 rounded-full flex items-center justify-center">
+                <Mail className="w-10 h-10 text-blue-600" />
+              </div>
+              <h1 className="text-2xl font-bold text-gray-900 mb-3">
+                Check your email
+              </h1>
+              <p className="text-gray-600 mb-6">
+                We sent a verification link to <strong>{email}</strong>
+              </p>
+              <p className="text-sm text-gray-500 mb-8">
+                Click the link in the email to verify your account and get started.
+              </p>
+              <div className="space-y-3">
+                <Link href="/auth/login" className="block">
+                  <Button variant="outline" className="w-full rounded-full">
+                    Back to Login
+                  </Button>
+                </Link>
+                <button
+                  onClick={() => setEmailSent(false)}
+                  className="w-full text-sm text-gray-500 hover:text-gray-700"
+                >
+                  Didn&apos;t receive the email? Try again
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

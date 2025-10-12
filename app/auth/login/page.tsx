@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
@@ -9,14 +9,28 @@ import { PrimaryButton } from '@/components/ui/primary-button'
 import { Input } from '@/components/ui/input'
 import { Eye, EyeOff } from 'lucide-react'
 
-export default function LoginPage() {
+function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = createClient()
+
+  useEffect(() => {
+    // Check for error or success messages from URL params
+    const errorParam = searchParams.get('error')
+    const successParam = searchParams.get('success')
+    
+    if (errorParam === 'verification_failed') {
+      setError('Email verification failed. Please try signing up again.')
+    } else if (successParam === 'verified') {
+      setSuccess('Email verified successfully! You can now log in.')
+    }
+  }, [searchParams])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -86,6 +100,13 @@ export default function LoginPage() {
           <h1 className="text-3xl font-semibold text-center text-gray-900 mb-8">
             Login to continue
           </h1>
+
+          {/* Success Message */}
+          {success && (
+            <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm">
+              {success}
+            </div>
+          )}
 
           {/* Error Message */}
           {error && (
@@ -191,4 +212,14 @@ export default function LoginPage() {
   )
 }
 
-
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
+  )
+}
