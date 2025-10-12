@@ -89,8 +89,11 @@ export default function CreatorProfilePage() {
   }, [username, user, loading])
 
   const handleSubscribe = () => {
-    console.log('Subscribe clicked')
-    router.push(`/subscriptions/${creator?.id}`)
+    if (!creator?.subscriptionPrice || creator.subscriptionPrice === 0) {
+      alert('This creator hasn\'t set up subscriptions yet')
+      return
+    }
+    router.push(`/subscriptions/${getCreatorUsername(creator)}/checkout`)
   }
 
   const handleFollow = async () => {

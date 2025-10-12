@@ -2,7 +2,15 @@ import { apiClient } from './client'
 import { Subscription } from '../types'
 
 export const subscriptionsApi = {
-  // Subscribe to a creator
+  // Create Stripe checkout session for subscription
+  createCheckoutSession: async (creatorId: string) => {
+    const response = await apiClient.post<{ data: { checkoutUrl: string; sessionId: string } }>(
+      `/subscriptions/${creatorId}/checkout`
+    )
+    return response.data.data
+  },
+
+  // Subscribe to a creator (old method with payment method)
   subscribe: async (creatorId: string, paymentMethodId: string) => {
     const response = await apiClient.post<{ data: { subscription: Subscription; clientSecret?: string } }>(
       `/subscriptions/${creatorId}`,
