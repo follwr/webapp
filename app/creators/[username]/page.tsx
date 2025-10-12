@@ -10,7 +10,7 @@ import { followsApi } from '@/lib/api/follows'
 import { CreatorProfile, Post } from '@/lib/types'
 import { Product } from '@/lib/api/products'
 import { PostCard } from '@/components/posts/post-card'
-import { getCreatorDisplayName, getCreatorUsername, getCreatorBio, getCreatorProfilePicture } from '@/lib/utils/profile'
+import { getCreatorDisplayName, getCreatorUsername, getCreatorBio } from '@/lib/utils/profile'
 
 export default function CreatorProfilePage() {
   const { user, loading } = useAuth()

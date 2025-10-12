@@ -1,9 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import { PrimaryButton } from '@/components/ui/primary-button'
 import { Input } from '@/components/ui/input'
@@ -14,7 +12,6 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
   const supabase = createClient()
 
   const handleResetPassword = async (e: React.FormEvent) => {
@@ -74,7 +71,7 @@ export default function ForgotPasswordPage() {
             Check your email
           </h2>
           <p className="text-gray-600 text-center max-w-md mb-8">
-            We've sent password reset instructions to <span className="font-medium text-gray-900">{email}</span>
+            We&apos;ve sent password reset instructions to <span className="font-medium text-gray-900">{email}</span>
           </p>
 
           {/* Button */}

@@ -19,6 +19,7 @@ export interface UserProfile {
 
 export interface CreatorProfile {
   id: string
+  userId: string
   userProfileId: string
   coverImageUrl?: string
   isVerified: boolean
